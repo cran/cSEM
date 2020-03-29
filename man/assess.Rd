@@ -6,31 +6,32 @@
 \usage{
 assess(
   .object              = NULL, 
-  .only_common_factors = TRUE, 
   .quality_criterion   = c("all", "ave", "rho_C", "rho_C_mm", "rho_C_weighted", 
                            "rho_C_weighted_mm", "cronbachs_alpha", 
                           "cronbachs_alpha_weighted", "dg", "dl", "dml", "df",
-                          "esize", "cfi", "gfi", "ifi", "nfi", "nnfi", 
+                          "effects", "f2", "chi_square", "chi_square_df",
+                          "cfi", "gfi", "ifi", "nfi", "nnfi", 
                           "reliability", 
                           "rmsea", "rms_theta", "srmr",
                           "gof", "htmt", "r2", "r2_adj",
                           "rho_T", "rho_T_weighted", "vif", 
                           "vifmodeB",  "fl_criterion"),
+  .only_common_factors = TRUE, 
   ...
 )
 }
 \arguments{
 \item{.object}{An R object of class \link{cSEMResults} resulting from a call to \code{\link[=csem]{csem()}}.}
 
-\item{.only_common_factors}{Logical. Should only concepts modeled as common
-factors be included when calculating one of the following quality critera:
-AVE, the Fornell-Larcker criterion, HTMT, and all reliability estimates.
-Defaults to \code{TRUE}.}
-
 \item{.quality_criterion}{Character string. A single character string or a
 vector of character strings naming the quality criterion to compute. See
 the Details section for a list of possible candidates.
 Defaults to "\emph{all}" in which case all possible quality criteria are computed.}
+
+\item{.only_common_factors}{Logical. Should only concepts modeled as common
+factors be included when calculating one of the following quality critera:
+AVE, the Fornell-Larcker criterion, HTMT, and all reliability estimates.
+Defaults to \code{TRUE}.}
 
 \item{...}{Further arguments passed to functions called by \code{\link[=assess]{assess()}}.
 See \link{args_assess_dotdotdot} for a complete list of available arguments.}
@@ -49,7 +50,7 @@ article on the
 The function is essentially a wrapper around a number of internal functions
 that perform an "assessment task" (called a \strong{quality criterion} in \pkg{cSEM}
 parlance) like computing reliability estimates,
-the effect size, the heterotrait-monotrait ratio of correlations (HTMT) etc.
+the effect size (Cohen's f^2), the heterotrait-monotrait ratio of correlations (HTMT) etc.
 
 By default every possible quality criterion is calculated (\code{.quality_criterion = "all"}).
 If only a subset of quality criteria are needed a single character string
@@ -62,7 +63,12 @@ following quality criteria are implemented (in alphabetical order):
 amount of variation in the indicators that is due to the underlying latent variable.
 Practically, it is calculated as the ratio of the (indicator) true score variances
 (i.e., the sum of the squared loadings)
-relative to the sum of the total indicator variances. Calculation is done
+relative to the sum of the total indicator variances. The AVE is inherently
+tied to the common factor model. It is therefore unclear how to meaningfully
+interpret AVE results for constructs modeled as composites.
+It is possible to report the AVE for constructs modeled as composites by setting
+\code{.only_common_factors = FALSE}, however, result should be interpreted with caution
+as they may not have a conceptual meaning. Calculation is done
 by \code{\link[=calculateAVE]{calculateAVE()}}.}
 \item{Congeneric reliability; "rho_C", "rho_C_mm,", "rho_C_weighted", "rho_C_weighted_mm"}{
 An estimate of the reliability assuming a congeneric measurement model (i.e., loadings are
@@ -70,12 +76,21 @@ allowed to differ) and a test score (proxy) based on unit weights.
 There are four different versions implemented. See the
 \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#methods}{Methods and Formulae} section
 of the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model}
-article on the on the
+article on the
 \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website} for details.
-Alternative but synonemmous names for \code{"rho_C_mm"} are:
+Alternative but synonemmous names for \code{"rho_C"} are:
 composite reliability, construct reliablity, reliability coefficient,
 Joereskog's rho, coefficient omega, or Dillon-Goldstein's rho.
-For \code{"rho_C_weighted_mm"}: (Dijkstra-Henselers) rhoA, or rhoB.
+For \code{"rho_C_weighted"}: (Dijkstra-Henselers) rhoA. \code{rho_C_mm} and \code{rho_C_weighted_mm}
+have no corresponding names. The former uses unit weights scaled by (w'Sw)^(-1/2) and
+the latter weights scaled by (w'Sigma_hat w)^(-1/2) where Sigma_hat is
+the model-implied indicator correlation matrix.
+The Congeneric reliability is inherently
+tied to the common factor model. It is therefore unclear how to meaningfully
+interpret congeneric reliability estimates for constructs modeled as composites.
+It is possible to report the congeneric reliability for constructs modeled as
+composites by setting \code{.only_common_factors = FALSE}, however, result should be
+interpreted with caution as they may not have a conceptual meaning.
 Calculation is done by \code{\link[=calculateRhoC]{calculateRhoC()}}.}
 \item{Cronbach's alpha; "cronbachs_alpha"}{An estimate of the
 reliability assuming a tau-equivalent measurement model (i.e., a measurement
@@ -87,7 +102,17 @@ reliability which is
 the prefered name for this kind of reliability in \pkg{cSEM}, as it clearly states what
 it actually estimates (the tau-equivalent reliability as opposed to
 the congeneric reliability). "rho_T" and "cronbachs_alpha" are therefore
-always identical. Calculation is done by \code{\link[=calculateRhoT]{calculateRhoT()}}}
+always identical.
+The tau-equivalent
+reliability (Cronbach's alpha) is inherently
+tied to the common factor model. It is therefore unclear how to meaningfully
+interpret tau-equivalent
+reliability estimates for constructs modeled as composites.
+It is possible to report tau-equivalent
+reliability estimates for constructs modeled as
+composites by setting \code{.only_common_factors = FALSE}, however, result should be
+interpreted with caution as they may not have a conceptual meaning.
+Calculation is done by \code{\link[=calculateRhoT]{calculateRhoT()}}}
 \item{Distance measures; "dg", "dl", "dml"}{Measures of the distance
 between the model-implied and the empirical indicator correlation matrix.
 Currently, the geodesic distance (\code{"dg"}), the squared Euclidian distance
@@ -97,23 +122,28 @@ and \code{\link[=calculateDML]{calculateDML()}}.}
 \item{Degrees of freedom, "df"}{
 Returns the degrees of freedom. Calculation is done by \code{\link[=calculateDf]{calculateDf()}}.
 }
-\item{Effect size; "esize"}{An index of the effect size of an independent
-variable in a structural regression equation. The effect size of the k'th
+\item{Effects; "effects"}{Total and indirect effect estimates. Additionally,
+the variance accounted for (VAF) is computed. The VAF is defined as the ratio of a variables
+indirect effect to its total effect. Calculation is done
+by \code{\link[=calculateEffects]{calculateEffects()}}.}
+\item{Effect size; "f2"}{An index of the effect size of an independent
+variable in a structural regression equation. This measure is commonly
+known as Cohen's f^2. The effect size of the k'th
 independent variable in this case
 is definied as the ratio (R2_included - R2_excluded)/(1 - R2_included), where
 R2_included and R2_excluded are the R squares of the
 original structural model regression equation (R2_included) and the
 alternative specification with the k'th variable dropped (R2_excluded).
-This measure is commonly known as Cohen's f^2.
-Calculation is done by \code{\link[=calculateEffectSize]{calculateEffectSize()}}.}
-\item{Fit indices; "cfi", "gfi", "ifi", "nfi", "nnfi",  "rmsea", "rms_theta"
-"srmr"}{
+Calculation is done by \code{\link[=calculatef2]{calculatef2()}}.}
+\item{Fit indices; "chi_square", "chi_square_df", "cfi", "gfi", "ifi", "nfi",
+"nnfi",  "rmsea", "rms_theta", "srmr"}{
 Several absolute and incremental fit indices. Note that their suitability
-for models containing constructs modeled as common factors is still an
+for models containing constructs modeled as composites is still an
 open research question. Also note that fit indices are not tests in a
 hypothesis testing sense and
-decisions based on common cut-offs proposed in the literature should be
-considered with caution!. Calculation is done by \code{\link[=calculateCFI]{calculateCFI()}},
+decisions based on common one-size-fits-all cut-offs proposed in the literature
+suffer from serious statistical drawbacks. Calculation is done by \code{\link[=calculateChiSquare]{calculateChiSquare()}},
+\code{\link[=calculateChiSquareDf]{calculateChiSquareDf()}}, \code{\link[=calculateCFI]{calculateCFI()}},
 \code{\link[=calculateGFI]{calculateGFI()}}, \code{\link[=calculateIFI]{calculateIFI()}}, \code{\link[=calculateNFI]{calculateNFI()}}, \code{\link[=calculateNNFI]{calculateNNFI()}},
 \code{\link[=calculateRMSEA]{calculateRMSEA()}}, \code{\link[=calculateRMSTheta]{calculateRMSTheta()}} and \code{\link[=calculateSRMR]{calculateSRMR()}}.}
 \item{Fornell-Larcker criterion; "fl_criterion"}{A rule suggested by \insertCite{Fornell1981;textual}{cSEM}
@@ -133,17 +163,30 @@ Note that, contrary to what the name suggests, the GoF is \strong{not} a
 measure of model fit in a Chi-square fit test sense. Calculation is done
 by \code{\link[=calculateGoF]{calculateGoF()}}.}
 \item{Heterotrait-monotrait ratio of correlations (HTMT); "htmt"}{
-An estimate of the latent variable correlation used to assess
-convergent and/or discriminant validity of a construct. Calculation is done
-by \code{\link[=calculateHTMT]{calculateHTMT()}}.}
+An estimate of the correlation between latent variables. The HTMT is used
+to assess convergent and/or discriminant validity of a construct.
+The HTMT is inherently tied to the common factor model. If the model contains
+less than two constructs modeled as common factors and
+\code{.only_common_factors = TRUE}, \code{NA} is returned.
+It is possible to report the HTMT for constructs modeled as
+composites by setting \code{.only_common_factors = FALSE}, however, result should be
+interpreted with caution as they may not have a conceptual meaning.
+Calculation is done by \code{\link[=calculateHTMT]{calculateHTMT()}}.}
 \item{Reliability: "reliability"}{
 As described in the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#methods}{Methods and Formulae}
 section of the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model}
-article on the on the \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website}
+article on the \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website}
 there are many different estimators for the (internal consistency) reliability.
 Choosing \code{.quality_criterion = "reliability"} computes the three most common
 measures, namely: "Cronbachs alpha" (identical to "rho_T"), "Jöreskogs rho" (identical to "rho_C_mm"),
-and "Dijkstra-Henselers rho A" (identical to "rho_C_weighted_mm").}
+and "Dijkstra-Henselers rho A" (identical to "rho_C_weighted_mm").
+Reliability is inherently
+tied to the common factor model. It is therefore unclear how to meaningfully
+interpret reliability estimates for constructs modeled as composites.
+It is possible to report the three common reliability estimates for constructs modeled as
+composites by setting \code{.only_common_factors = FALSE}, however, result should be
+interpreted with caution as they may not have a conceptual meaning.
+}
 \item{R square and R square adjusted; "r2", "r2_adj"}{The R square and the adjusted
 R square for each structural regression equation.
 Calculated when running \code{\link[=csem]{csem()}}.}
@@ -152,6 +195,15 @@ reliability assuming a tau-equivalent measurement model (i.e. a measurement
 model with equal loadings) and a test score (proxy) based on unit weights.
 Tau-equivalent reliability is the preferred name for reliability estimates
 that assume a tau-equivalent measurment model such as Cronbach's alpha.
+The tau-equivalent
+reliability (Cronbach's alpha) is inherently
+tied to the common factor model. It is therefore unclear how to meaningfully
+interpret tau-equivalent
+reliability estimates for constructs modeled as composites.
+It is possible to report tau-equivalent
+reliability estimates for constructs modeled as
+composites by setting \code{.only_common_factors = FALSE}, however, result should be
+interpreted with caution as they may not have a conceptual meaning.
 Calculation is done by \code{\link[=calculateRhoT]{calculateRhoT()}}.}
 \item{Variance inflation factors (VIF); "vif"}{An index for the amount of (multi-)
 collinearity between independent variables of a regression equation. Computed
@@ -181,8 +233,8 @@ factor model (see the
 article for details).
 It is possible to force computation of all quality criteria for constructs
 modeled as composites by setting \code{.only_common_factors = FALSE}, however,
-we explicitly warn to interpret quality criteria in this case with caution,
-as they may not even have a conceptual meaning.
+we explicitly warn to interpret quality criteria in analogy to the common factor
+model in this case, as the interpretation often does not carry over to composite models.
 
 \subsection{Resampling}{
 To resample a given quality criterion supply the name of the function
@@ -191,7 +243,7 @@ See \code{\link[=resamplecSEMResults]{resamplecSEMResults()}} for details.
 }
 }
 \examples{
-\donttest{# ===========================================================================
+# ===========================================================================
 # Using the threecommonfactors dataset
 # ===========================================================================
 model <- "
@@ -215,7 +267,7 @@ a$HTMT
 # You may also just compute a subset of the quality criteria
 assess(res, .quality_criterion = c("ave", "rho_C", "htmt"))
 
-## Resampling ---------------------------------------------------------------
+\donttest{## Resampling ---------------------------------------------------------------
 # To resample a given quality criterion use csem()'s .user_funs argument
 # Note: The output of the quality criterion needs to be a vector or a matrix.
 #       Matrices will be vectorized columnwise.
@@ -231,6 +283,20 @@ res$Estimates$Estimates_resample$Estimates1$User_fun$Resampled[1:4, ]
 ## Use infer() to compute e.g. the 95\% percentile confidence interval
 res_infer <- infer(res, .quantity = "CI_percentile")
 res_infer$User_fun 
+
+## Several quality criteria can be resampeled simultaneously
+res <- csem(threecommonfactors, model, 
+            .resample_method = "bootstrap",
+            .R               = 40,
+            .user_funs       = list(
+              "HTMT" = cSEM:::calculateHTMT,
+              "SRMR" = cSEM:::calculateSRMR,
+              "RMS_theta" = cSEM:::calculateRMSTheta
+            ),
+            .tolerance = 1e-04
+)
+res$Estimates$Estimates_resample$Estimates1$HTMT$Resampled[1:4, ]
+res$Estimates$Estimates_resample$Estimates1$RMS_theta$Resampled[1:4]
 }
 }
 \seealso{

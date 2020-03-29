@@ -4,32 +4,30 @@
 \alias{reliability}
 \alias{calculateRhoC}
 \alias{calculateRhoT}
-\title{Internal: Reliability}
+\title{Reliability}
 \usage{
 calculateRhoC(
   .object = NULL,
-  .model_implied = FALSE,
+  .model_implied = TRUE,
   .only_common_factors = TRUE,
-  .weighted = args_default()$.weighted
+  .weighted = FALSE
 )
 
 calculateRhoT(
   .object = NULL,
-  .alpha = args_default()$.alpha,
-  .closed_form_ci = args_default()$.closed_form_ci,
+  .alpha = 0.05,
+  .closed_form_ci = FALSE,
   .only_common_factors = TRUE,
   .output_type = c("vector", "data.frame"),
-  .weighted = args_default()$.weighted,
+  .weighted = FALSE,
   ...
 )
 }
 \arguments{
 \item{.object}{An R object of class \link{cSEMResults} resulting from a call to \code{\link[=csem]{csem()}}.}
 
-\item{.model_implied}{Logical. Should the RMS_theta be computed using the
-model-implied construct correlation matrix (\code{TRUE}) or the construct correlation matrix
-based on V(eta) = WSW' divided by the square root of the respective
-reliabilities (\code{FALSE}). Defaults to \code{FALSE}.}
+\item{.model_implied}{Logical. Should weights be scaled using the model-implied
+indicator correlation matrix? Defaults to \code{TRUE}.}
 
 \item{.only_common_factors}{Logical. Should only concepts modeled as common
 factors be included when calculating one of the following quality critera:
@@ -83,20 +81,12 @@ For the tau-equivalent reliability ("\code{rho_T}" or "\code{cronbachs_alpha}") 
 confidence interval may be computed \insertCite{Trinchera2018}{cSEM} by setting
 \code{.closed_form_ci = TRUE} (default is \code{FALSE}). If \code{.alpha} is a vector
 several CI's are returned.
-
-The function is only applicable to objects inheriting class \code{cSEMResults_default}.
-For objects of class \code{cSEMResults_multi} and \code{cSEMResults_2ndorder} use \code{\link[=assess]{assess()}}.
 }
 \section{Functions}{
 \itemize{
-\item \code{calculateRhoC}: Calculate the congeneric reliability, also known as
-composite reliability or rho_A.
+\item \code{calculateRhoC}: Calculate the congeneric reliability
 
-\item \code{calculateRhoT}: Calculate the tau-equivalent reliability, also known
-as Cronbach's alpha or coefficient alpha. Since
-indicators are always standarized in \code{cSEM},
-tau-equivalent reliability is identical to the
-parallel reliability.
+\item \code{calculateRhoT}: Calculate the tau-equivalent reliability
 }}
 
 \references{
@@ -105,4 +95,3 @@ parallel reliability.
 \seealso{
 \code{\link[=assess]{assess()}}, \link{cSEMResults}
 }
-\keyword{internal}

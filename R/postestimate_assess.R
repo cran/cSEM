@@ -8,7 +8,7 @@
 #' The function is essentially a wrapper around a number of internal functions
 #' that perform an "assessment task" (called a **quality criterion** in \pkg{cSEM}
 #' parlance) like computing reliability estimates,
-#' the effect size, the heterotrait-monotrait ratio of correlations (HTMT) etc.
+#' the effect size (Cohen's f^2), the heterotrait-monotrait ratio of correlations (HTMT) etc.
 #' 
 #' By default every possible quality criterion is calculated (`.quality_criterion = "all"`). 
 #' If only a subset of quality criteria are needed a single character string
@@ -21,7 +21,12 @@
 #'   amount of variation in the indicators that is due to the underlying latent variable. 
 #'   Practically, it is calculated as the ratio of the (indicator) true score variances 
 #'   (i.e., the sum of the squared loadings)
-#'   relative to the sum of the total indicator variances. Calculation is done
+#'   relative to the sum of the total indicator variances. The AVE is inherently
+#'   tied to the common factor model. It is therefore unclear how to meaningfully 
+#'   interpret AVE results for constructs modeled as composites. 
+#'   It is possible to report the AVE for constructs modeled as composites by setting 
+#'   `.only_common_factors = FALSE`, however, result should be interpreted with caution 
+#'   as they may not have a conceptual meaning. Calculation is done
 #'   by [calculateAVE()].}
 #' \item{Congeneric reliability; "rho_C", "rho_C_mm,", "rho_C_weighted", "rho_C_weighted_mm"}{
 #'   An estimate of the reliability assuming a congeneric measurement model (i.e., loadings are
@@ -29,12 +34,21 @@
 #'   There are four different versions implemented. See the 
 #'   \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#methods}{Methods and Formulae} section
 #'   of the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
-#'   article on the on the
+#'   article on the
 #'   \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website} for details.
-#'   Alternative but synonemmous names for `"rho_C_mm"` are: 
+#'   Alternative but synonemmous names for `"rho_C"` are: 
 #'   composite reliability, construct reliablity, reliability coefficient, 
 #'   Joereskog's rho, coefficient omega, or Dillon-Goldstein's rho. 
-#'   For `"rho_C_weighted_mm"`: (Dijkstra-Henselers) rhoA, or rhoB. 
+#'   For `"rho_C_weighted"`: (Dijkstra-Henselers) rhoA. `rho_C_mm` and `rho_C_weighted_mm`
+#'   have no corresponding names. The former uses unit weights scaled by (w'Sw)^(-1/2) and
+#'   the latter weights scaled by (w'Sigma_hat w)^(-1/2) where Sigma_hat is 
+#'   the model-implied indicator correlation matrix.
+#'   The Congeneric reliability is inherently
+#'   tied to the common factor model. It is therefore unclear how to meaningfully 
+#'   interpret congeneric reliability estimates for constructs modeled as composites. 
+#'   It is possible to report the congeneric reliability for constructs modeled as 
+#'   composites by setting `.only_common_factors = FALSE`, however, result should be 
+#'   interpreted with caution as they may not have a conceptual meaning.
 #'   Calculation is done by [calculateRhoC()].}
 #' \item{Cronbach's alpha; "cronbachs_alpha"}{An estimate of the
 #'   reliability assuming a tau-equivalent measurement model (i.e., a measurement
@@ -46,7 +60,17 @@
 #'   the prefered name for this kind of reliability in \pkg{cSEM}, as it clearly states what
 #'   it actually estimates (the tau-equivalent reliability as opposed to
 #'   the congeneric reliability). "rho_T" and "cronbachs_alpha" are therefore
-#'   always identical. Calculation is done by [calculateRhoT()]}
+#'   always identical. 
+#'   The tau-equivalent
+#'   reliability (Cronbach's alpha) is inherently
+#'   tied to the common factor model. It is therefore unclear how to meaningfully 
+#'   interpret tau-equivalent
+#'   reliability estimates for constructs modeled as composites. 
+#'   It is possible to report tau-equivalent
+#'   reliability estimates for constructs modeled as 
+#'   composites by setting `.only_common_factors = FALSE`, however, result should be 
+#'   interpreted with caution as they may not have a conceptual meaning.
+#'   Calculation is done by [calculateRhoT()]}
 #' \item{Distance measures; "dg", "dl", "dml"}{Measures of the distance
 #'   between the model-implied and the empirical indicator correlation matrix.
 #'   Currently, the geodesic distance (`"dg"`), the squared Euclidian distance
@@ -56,23 +80,28 @@
 #' \item{Degrees of freedom, "df"}{
 #'   Returns the degrees of freedom. Calculation is done by [calculateDf()].
 #'   }
-#' \item{Effect size; "esize"}{An index of the effect size of an independent
-#'   variable in a structural regression equation. The effect size of the k'th
+#' \item{Effects; "effects"}{Total and indirect effect estimates. Additionally, 
+#'   the variance accounted for (VAF) is computed. The VAF is defined as the ratio of a variables
+#'   indirect effect to its total effect. Calculation is done
+#'   by [calculateEffects()].}
+#' \item{Effect size; "f2"}{An index of the effect size of an independent
+#'   variable in a structural regression equation. This measure is commonly 
+#'   known as Cohen's f^2. The effect size of the k'th
 #'   independent variable in this case
 #'   is definied as the ratio (R2_included - R2_excluded)/(1 - R2_included), where 
 #'   R2_included and R2_excluded are the R squares of the 
 #'   original structural model regression equation (R2_included) and the
 #'   alternative specification with the k'th variable dropped (R2_excluded).
-#'   This measure is commonly known as Cohen's f^2.
-#'   Calculation is done by [calculateEffectSize()].}
-#' \item{Fit indices; "cfi", "gfi", "ifi", "nfi", "nnfi",  "rmsea", "rms_theta"
-#'   "srmr"}{
+#'   Calculation is done by [calculatef2()].}
+#' \item{Fit indices; "chi_square", "chi_square_df", "cfi", "gfi", "ifi", "nfi", 
+#'       "nnfi",  "rmsea", "rms_theta", "srmr"}{
 #'   Several absolute and incremental fit indices. Note that their suitability
-#'   for models containing constructs modeled as common factors is still an
+#'   for models containing constructs modeled as composites is still an
 #'   open research question. Also note that fit indices are not tests in a 
 #'   hypothesis testing sense and
-#'   decisions based on common cut-offs proposed in the literature should be
-#'   considered with caution!. Calculation is done by [calculateCFI()], 
+#'   decisions based on common one-size-fits-all cut-offs proposed in the literature 
+#'   suffer from serious statistical drawbacks. Calculation is done by [calculateChiSquare()],
+#'   [calculateChiSquareDf()], [calculateCFI()], 
 #'   [calculateGFI()], [calculateIFI()], [calculateNFI()], [calculateNNFI()], 
 #'   [calculateRMSEA()], [calculateRMSTheta()] and [calculateSRMR()].}
 #' \item{Fornell-Larcker criterion; "fl_criterion"}{A rule suggested by \insertCite{Fornell1981;textual}{cSEM}
@@ -92,17 +121,30 @@
 #'   measure of model fit in a Chi-square fit test sense. Calculation is done 
 #'   by [calculateGoF()].}
 #' \item{Heterotrait-monotrait ratio of correlations (HTMT); "htmt"}{
-#'   An estimate of the latent variable correlation used to assess
-#'   convergent and/or discriminant validity of a construct. Calculation is done
-#'   by [calculateHTMT()].}
+#'   An estimate of the correlation between latent variables. The HTMT is used 
+#'   to assess convergent and/or discriminant validity of a construct. 
+#'   The HTMT is inherently tied to the common factor model. If the model contains
+#'   less than two constructs modeled as common factors and 
+#'   `.only_common_factors = TRUE`, `NA` is returned.
+#'   It is possible to report the HTMT for constructs modeled as 
+#'   composites by setting `.only_common_factors = FALSE`, however, result should be 
+#'   interpreted with caution as they may not have a conceptual meaning.
+#'   Calculation is done by [calculateHTMT()].}
 #' \item{Reliability: "reliability"}{
 #'   As described in the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#methods}{Methods and Formulae} 
 #'   section of the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
-#'   article on the on the \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website} 
+#'   article on the \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website} 
 #'   there are many different estimators for the (internal consistency) reliability.
 #'   Choosing `.quality_criterion = "reliability"` computes the three most common
 #'   measures, namely: "Cronbachs alpha" (identical to "rho_T"), "Jöreskogs rho" (identical to "rho_C_mm"),
-#'   and "Dijkstra-Henselers rho A" (identical to "rho_C_weighted_mm").}
+#'   and "Dijkstra-Henselers rho A" (identical to "rho_C_weighted_mm").
+#'   Reliability is inherently
+#'   tied to the common factor model. It is therefore unclear how to meaningfully 
+#'   interpret reliability estimates for constructs modeled as composites. 
+#'   It is possible to report the three common reliability estimates for constructs modeled as 
+#'   composites by setting `.only_common_factors = FALSE`, however, result should be 
+#'   interpreted with caution as they may not have a conceptual meaning.
+#'   }
 #' \item{R square and R square adjusted; "r2", "r2_adj"}{The R square and the adjusted
 #'   R square for each structural regression equation.
 #'   Calculated when running [csem()].}
@@ -111,6 +153,15 @@
 #'   model with equal loadings) and a test score (proxy) based on unit weights.
 #'   Tau-equivalent reliability is the preferred name for reliability estimates
 #'   that assume a tau-equivalent measurment model such as Cronbach's alpha.
+#'   The tau-equivalent
+#'   reliability (Cronbach's alpha) is inherently
+#'   tied to the common factor model. It is therefore unclear how to meaningfully 
+#'   interpret tau-equivalent
+#'   reliability estimates for constructs modeled as composites. 
+#'   It is possible to report tau-equivalent
+#'   reliability estimates for constructs modeled as 
+#'   composites by setting `.only_common_factors = FALSE`, however, result should be 
+#'   interpreted with caution as they may not have a conceptual meaning.
 #'   Calculation is done by [calculateRhoT()].}
 #' \item{Variance inflation factors (VIF); "vif"}{An index for the amount of (multi-) 
 #'   collinearity between independent variables of a regression equation. Computed
@@ -140,8 +191,8 @@
 #' article for details). 
 #' It is possible to force computation of all quality criteria for constructs 
 #' modeled as composites by setting `.only_common_factors = FALSE`, however, 
-#' we explicitly warn to interpret quality criteria in this case with caution, 
-#' as they may not even have a conceptual meaning. 
+#' we explicitly warn to interpret quality criteria in analogy to the common factor 
+#' model in this case, as the interpretation often does not carry over to composite models.
 #'
 #' \subsection{Resampling}{
 #' To resample a given quality criterion supply the name of the function
@@ -151,16 +202,17 @@
 #' 
 #' @usage assess(
 #'   .object              = NULL, 
-#'   .only_common_factors = TRUE, 
 #'   .quality_criterion   = c("all", "ave", "rho_C", "rho_C_mm", "rho_C_weighted", 
 #'                            "rho_C_weighted_mm", "cronbachs_alpha", 
 #'                           "cronbachs_alpha_weighted", "dg", "dl", "dml", "df",
-#'                           "esize", "cfi", "gfi", "ifi", "nfi", "nnfi", 
+#'                           "effects", "f2", "chi_square", "chi_square_df",
+#'                           "cfi", "gfi", "ifi", "nfi", "nnfi", 
 #'                           "reliability", 
 #'                           "rmsea", "rms_theta", "srmr",
 #'                           "gof", "htmt", "r2", "r2_adj",
 #'                           "rho_T", "rho_T_weighted", "vif", 
 #'                           "vifmodeB",  "fl_criterion"),
+#'   .only_common_factors = TRUE, 
 #'   ...
 #' )
 #' 
@@ -179,35 +231,17 @@
 
 assess <- function(
   .object              = NULL, 
-  .only_common_factors = TRUE, 
   .quality_criterion   = c("all", "ave", "rho_C", "rho_C_mm", "rho_C_weighted", 
                            "rho_C_weighted_mm", "cronbachs_alpha", 
                            "cronbachs_alpha_weighted", "dg", "dl", "dml", "df",
-                           "esize", "cfi", "gfi", "ifi", "nfi", "nnfi", 
+                           "effects", "f2", "chi_square", "chi_square_df",
+                           "cfi", "gfi", "ifi", "nfi", "nnfi", 
                            "reliability",
                            "rmsea", "rms_theta", "srmr",
                            "gof", "htmt", "r2", "r2_adj",
                            "rho_T", "rho_T_weighted", "vif", 
                            "vifmodeB",  "fl_criterion"),
-  ...
-){
-  UseMethod("assess")
-}
-
-#' @export
-
-assess.cSEMResults_default <- function(
-  .object              = NULL, 
   .only_common_factors = TRUE, 
-  .quality_criterion   = c("all", "ave", "rho_C", "rho_C_mm", "rho_C_weighted", 
-                           "rho_C_weighted_mm", "cronbachs_alpha", 
-                           "cronbachs_alpha_weighted", "dg", "dl", "dml", "df",
-                           "esize", "cfi", "gfi", "ifi", "nfi", "nnfi", 
-                           "reliability",
-                           "rmsea", "rms_theta", "srmr",
-                           "gof", "htmt", "r2", "r2_adj",
-                           "rho_T", "rho_T_weighted", "vif", 
-                           "vifmodeB",  "fl_criterion"),
   ...
 ){
   
@@ -215,8 +249,40 @@ assess.cSEMResults_default <- function(
   match.arg(.quality_criterion, 
             args_default(.choices = TRUE)$.quality_criterion, several.ok = TRUE)
   
+  ## 
+  if(inherits(.object, "cSEMResults_multi")) {
+    out <- lapply(.object, assess, 
+           .only_common_factors = .only_common_factors,
+           .quality_criterion = .quality_criterion,
+           ...
+    )
+    return(out)
+  } else if(inherits(.object, "cSEMResults_2ndorder")) {
+    x11 <- .object$First_stage$Estimates
+    x12 <- .object$First_stage$Information
+    
+    x21 <- .object$Second_stage$Estimates
+    x22 <- .object$Second_stage$Information
+    
+  } else if(inherits(.object, "cSEMResults_default")) {
+
+    x21 <- .object$Estimates
+    x22 <- .object$Information
+    
+  } else {
+    stop2(
+      "The following error occured in the assess() function:\n",
+      "`.object` must be a `cSEMResults` object."
+    )
+  }
+  
+  if(x22$Model$model_type != "Linear") {
+    stop2("Currently, `assess()` does not support models containing nonlinear terms.",
+          "Use the individual `calculateXXX()` functions instead.")
+  }
   ## Set up empty list
   out <- list()
+  out[["Information"]] <- list()
   
   ## Select quality criteria
   if(any(.quality_criterion %in% c("all", "ave"))) {
@@ -230,7 +296,9 @@ assess.cSEMResults_default <- function(
     # RhoC
     out[["RhoC"]]  <- calculateRhoC(
       .object, 
-      .only_common_factors = .only_common_factors
+      .only_common_factors = .only_common_factors,
+      .weighted = FALSE,
+      .model_implied = TRUE
     )
   }
   if(any(.quality_criterion %in% c("all", "rho_C_mm"))) {
@@ -238,7 +306,8 @@ assess.cSEMResults_default <- function(
     out[["RhoC_mm"]]  <- calculateRhoC(
       .object, 
       .only_common_factors = .only_common_factors,
-      .model_implied = TRUE
+      .weighted = FALSE,
+      .model_implied = FALSE
     )
   }
   if(any(.quality_criterion %in% c("all", "rho_C_weighted"))) {
@@ -246,7 +315,8 @@ assess.cSEMResults_default <- function(
     out[["RhoC_weighted"]]  <- calculateRhoC(
       .object, 
       .only_common_factors = .only_common_factors, 
-      .weighted = TRUE
+      .weighted = TRUE,
+      .model_implied = FALSE
     )
   }
   if(any(.quality_criterion %in% c("all", "rho_C_weighted_mm"))) {
@@ -258,25 +328,6 @@ assess.cSEMResults_default <- function(
       .model_implied = TRUE
     )
   }
-  # if(any(.quality_criterion %in% c("all", "cronbachs_alpha"))) {
-  #   # Cronbach's alpha aka RhoT
-  #   out[["Cronbachs_alpha"]]  <- calculateRhoT(
-  #     .object, 
-  #     .only_common_factors = .only_common_factors, 
-  #     .output_type         = "vector",
-  #     ...
-  #   )
-  # }
-  # if(any(.quality_criterion %in% c("all", "cronbachs_alpha_weighted"))) {
-  #   # Cronbach's alpha weighted aka RhoT weighted
-  #   out[["Cronbachs_alpha_weighted"]]  <- calculateRhoT(
-  #     .object, 
-  #     .only_common_factors = .only_common_factors, 
-  #     .output_type         = "vector",
-  #     .weighted            = TRUE,
-  #     ...
-  #   )
-  # }
   if(any(.quality_criterion %in% c("all", "dg"))) {
     # dG
     out[["DG"]]    <- calculateDG(.object, ...)
@@ -293,9 +344,28 @@ assess.cSEMResults_default <- function(
     # dML
     out[["Df"]]   <- calculateDf(.object, ...)
   }
-  if(any(.quality_criterion %in% c("all", "esize"))) {
+  if(any(.quality_criterion %in% c("all", "effects")) && 
+     !all(x22$Model$structural == 0)) {
+    # Direct, total and indirect effects
+    out[["Effects"]] <- if(inherits(.object, "cSEMResults_2ndorder")) {
+      summarize(.object)$Second_stage$Estimates$Effect_estimates
+    } else {
+      summarize(.object)$Estimates$Effect_estimates 
+    }
+  }
+  if(any(.quality_criterion %in% c("all", "f2")) && !all(x22$Model$structural == 0) 
+     && x22$Arguments$.approach_paths == "OLS") {
+    
+    # Effect size (f2)
+    out[["F2"]] <- calculatef2(.object)
+  }
+  if(any(.quality_criterion %in% c("all", "chi_square"))) {
     # Effect size
-    out[["Effect_size"]] <- calculateEffectSize(.object)
+    out[["Chi_square"]] <- calculateChiSquare(.object)
+  }
+  if(any(.quality_criterion %in% c("all", "chi_square_df"))) {
+    # Effect size
+    out[["Chi_square_df"]] <- calculateChiSquareDf(.object)
   }
   if(any(.quality_criterion %in% c("all", "cfi"))) {
     # Effect size
@@ -321,55 +391,91 @@ assess.cSEMResults_default <- function(
     # Effect size
     out[["RMSEA"]] <- calculateRMSEA(.object)
   }
-  if(any(.quality_criterion %in% c("all", "rms_theta"))) {
-    # Effect size
-    out[["RMS_theta"]] <- calculateRMSTheta(.object, ...)
+  if(any(.quality_criterion %in% c("all", "rms_theta")) && 
+     inherits(.object, "cSEMResults_default")) {
+    # RMS theta using the the construct correlation matrix WSW'
+    out[["RMS_theta"]] <- calculateRMSTheta(.object)
   }
   if(any(.quality_criterion %in% c("all", "srmr"))) {
     # Effect size
     out[["SRMR"]] <- calculateSRMR(.object, ...)
   }
   if(any(.quality_criterion %in% c("all", "fl_criterion"))) {
-    # Fornell-Larcker
-    ## Get relevant objects
-    con_types <-.object$Information$Model$construct_type
-    names_cf  <- names(con_types[con_types == "Common factor"])
-    P         <- .object$Estimates$Construct_VCV
-    
-    if(.only_common_factors) {
-      P <- P[names_cf, names_cf]
+    if(inherits(.object, "cSEMResults_default")) {
+      # Fornell-Larcker
+      ## Get relevant objects
+      con_types <-.object$Information$Model$construct_type
+      names_cf  <- names(con_types[con_types == "Common factor"])
+      P         <- .object$Estimates$Construct_VCV
+      
+      if(.only_common_factors) {
+        P <- P[names_cf, names_cf]
+      }
+      
+      if(sum(dim(P)) > 0) {
+        FL_matrix <- cov2cor(P)^2
+        diag(FL_matrix) <- calculateAVE(.object, 
+                                        .only_common_factors = .only_common_factors)
+        out[["Fornell-Larcker"]] <- FL_matrix
+      } 
+
+    } else { # 2nd order
+      warning("Computation of the Fornell-Larcker criterion",
+              " not supported for models containing second-order constructs:\n",
+              "Argument 'fl_criterion' is ignored.", call. = FALSE)
     }
-    
-    if(sum(dim(P)) > 0) {
-      FL_matrix <- cov2cor(P)^2
-      diag(FL_matrix) <- calculateAVE(.object, 
-                                      .only_common_factors = .only_common_factors)
-      out[["Fornell-Larcker"]] <- FL_matrix
-    }
-    
     
   }
-  if(any(.quality_criterion %in% c("all", "gof"))) {
+  if(any(.quality_criterion %in% c("all", "gof")) && !all(x22$Model$structural == 0)) {
     # GoF
-    out[["GoF"]]   <- calculateGoF(
-      .object, 
-      .only_common_factors = .only_common_factors
-    )
+    out[["GoF"]]   <- calculateGoF(.object)
   }
   if(any(.quality_criterion %in% c("all", "htmt"))) {
     # HTMT 
-    out[["HTMT"]]  <- calculateHTMT(
-      .object, 
-      .only_common_factors = .only_common_factors
-    )
+    if(inherits(.object, "cSEMResults_default")) {
+      out[["HTMT"]]  <- calculateHTMT(
+        .object,
+        .only_common_factors  = .only_common_factors,
+        ...
+      )
+      # Get value of argument .p
+      args_htmt <- list(...)
+      if(any(names(args_htmt) == ".inference")) {
+        out$Information[[".inference"]] <- args_htmt[[".inference"]]
+      } else {
+        out$Information[[".inference"]] <- formals(calculateHTMT)[[".inference"]]
+      }
+      
+      if(any(names(args_htmt) == ".alpha")) {
+        out$Information[[".alpha"]] <- args_htmt[[".alpha"]]
+      } else {
+        out$Information[[".alpha"]] <- formals(calculateHTMT)[[".alpha"]]
+      } 
+    } else { # 2nd_order
+      warning("Computation of the HTMT",
+              " not supported for models containing second-order constructs:\n",
+              "Argument 'htmt' is ignored.", call. = FALSE) 
+    }
   }
-  if(any(.quality_criterion %in% c("all", "r2"))) {
+  if(any(.quality_criterion %in% c("all", "r2")) && !all(x22$Model$structural == 0)) {
     # R2
-    out[["R2"]]  <- .object$Estimates$R2
+    out[["R2"]]  <- x21$R2
+    if(inherits(.object, "cSEMResults_2ndorder")) {
+      # Keep only second-order R2s
+      second_order <- x22$Arguments_original$.model$vars_2nd
+      cfs          <- names(which(x22$Arguments_original$.model$construct_type == "Common factor"))
+      out$R2 <- out$R2[intersect(second_order, cfs)]
+    }
   }
-  if(any(.quality_criterion %in% c("all", "r2_adj"))) {
+  if(any(.quality_criterion %in% c("all", "r2_adj")) && !all(x22$Model$structural == 0)) {
     # Adjusted R2
-    out[["R2_adj"]]  <- .object$Estimates$R2adj
+    out[["R2_adj"]]  <- x21$R2adj
+    if(inherits(.object, "cSEMResults_2ndorder")) {
+      # Keep only second-order R2s
+      second_order <- x22$Arguments_original$.model$vars_2nd
+      cfs          <- names(which(x22$Arguments_original$.model$construct_type == "Common factor"))
+      out$R2 <- out$R2[intersect(second_order, cfs)]
+    }
   }
   if(any(.quality_criterion %in% c("all", "reliability"))) {
     # RhoT
@@ -387,6 +493,7 @@ assess.cSEMResults_default <- function(
     out$reliability[["Joereskogs_rho"]] <- calculateRhoC(
       .object, 
       .only_common_factors = .only_common_factors,
+      .weighted = FALSE,
       .model_implied = TRUE
     )
     
@@ -395,7 +502,7 @@ assess.cSEMResults_default <- function(
       .object, 
       .only_common_factors = .only_common_factors, 
       .weighted = TRUE,
-      .model_implied = TRUE
+      .model_implied = FALSE
     )
   }
   if(any(.quality_criterion %in% c("all", "rho_T"))) {
@@ -407,7 +514,7 @@ assess.cSEMResults_default <- function(
       ...
     )
   }
-  if(any(.quality_criterion %in% c("all", "rho_C_weighted"))) {
+  if(any(.quality_criterion %in% c("all", "rho_T_weighted"))) {
     # RhoC weighted
     out[["RhoT_weighted"]]  <- calculateRhoT(
       .object, 
@@ -417,9 +524,9 @@ assess.cSEMResults_default <- function(
       ...
     )
   }
-  if(any(.quality_criterion %in% c("all", "vif"))) {
+  if(any(.quality_criterion %in% c("all", "vif")) && !all(x22$Model$structural == 0)) {
     # VIF
-    out[["VIF"]]  <- .object$Estimates$VIF
+    out[["VIF"]]  <- x21$VIF
     
     # Make output a matrix:
     # Note: this is necessary to be able to bootstrap the VIFs
@@ -440,7 +547,6 @@ assess.cSEMResults_default <- function(
     out[["VIF_modeB"]] <- calculateVIFModeB(.object)
   }
   
-  out[["Information"]] <- list()
   out$Information[["All"]] <- FALSE
   
   if(any(.quality_criterion == "all")) {
@@ -449,56 +555,4 @@ assess.cSEMResults_default <- function(
   
   class(out) <- "cSEMAssess"
   return(out)
-}
-
-#' @export
-
-assess.cSEMResults_multi <- function(
-  .object              = NULL,
-  .only_common_factors = TRUE,
-  .quality_criterion   = c("all", "ave", "rho_C", "rho_C_mm", "rho_C_weighted", 
-                           "rho_C_weighted_mm", "cronbachs_alpha",  
-                           "cronbachs_alpha_weighted", "dg", "dl", "dml", "df",
-                           "esize", "cfi", "gfi", "ifi", "nfi", "nnfi", 
-                           "reliability",
-                           "rmsea", "rms_theta", "srmr",
-                           "gof", "htmt", "r2", "r2_adj",
-                           "rho_T", "rho_T_weighted", "vif", 
-                           "vifmodeB",  "fl_criterion"),
-  ...
-){
-  
-  if(inherits(.object, "cSEMResults_2ndorder")) {
-    lapply(.object, assess.cSEMResults_2ndorder, 
-           .only_common_factors = .only_common_factors, 
-           .quality_criterion = .quality_criterion, 
-           ...
-    )
-  } else {
-    lapply(.object, assess.cSEMResults_default, 
-           .only_common_factors = .only_common_factors,
-           .quality_criterion = .quality_criterion,
-           ...
-    )
-  }
-}
-
-#' @export
-
-assess.cSEMResults_2ndorder <- function(
-  .object              = NULL,
-  .only_common_factors = TRUE,
-  .quality_criterion   = c("all", "ave", "rho_C", "rho_C_mm", "rho_C_weighted", 
-                           "rho_C_weighted_mm", "cronbachs_alpha",  
-                           "cronbachs_alpha_weighted", "dg", "dl", "dml", "df",
-                           "esize", "cfi", "gfi", "ifi", "nfi", "nnfi", 
-                           "reliability",
-                           "rmsea", "rms_theta", "srmr",
-                           "gof", "htmt", "r2", "r2_adj",
-                           "rho_T", "rho_T_weighted", "vif", 
-                           "vifmodeB",  "fl_criterion"),
-  ...
-  ){
-  
-  stop2("Currently, models containing second-order constructs are not supported by `assess()`.")
 }

@@ -1,8 +1,8 @@
 Package: cSEM
 Title: Composite-Based Structural Equation Modeling
-Version: 0.1.0
-Date: 2020-01-07
-Authors@R: c(person(given = "Manuel", family = "Rademaker",
+Version: 0.2.0
+Date: 2020-03-30
+Authors@R: c(person(given = "Manuel E.", family = "Rademaker",
                     role  = c("aut", "cre"),
                     email = "manuel.rademaker@uni-wuerzburg.de",
                     comment = c(ORCID = "0000-0002-8902-3561")),
@@ -12,14 +12,19 @@ Authors@R: c(person(given = "Manuel", family = "Rademaker",
                     comment = c(ORCID = "0000-0002-2110-9086")),
              person(given = "Tamara", family = "Schamberger",
                     role  = c("ctb"),
-                    email = "tamara.schamberger@uni-wuerzburg.de"),
+                    email = "tamara.schamberger@uni-wuerzburg.de",
+                    comment = c(ORCID = "0000-0002-7845-784X")),
              person(given = "Michael", family = "Klesel",
                     role  = c("ctb"),
                     email = ""),
              person(given = "Theo K.", family = "Dijkstra",
                     role  = c("ctb"),
-                    email = ""))
-Maintainer: Manuel Rademaker <manuel.rademaker@uni-wuerzburg.de>
+                    email = ""),
+             person(given = "Jörg", family = "Henseler",
+                    role  = c("ctb"),
+                    email = "",
+                    comment = c(ORCID = "0000-0002-9736-3048")))
+Maintainer: Manuel E. Rademaker <manuel.rademaker@uni-wuerzburg.de>
 Depends: R (>= 3.5.0)
 Description: Estimate, assess, test, and study linear, nonlinear, hierarchical 
   and multigroup structural equation models using composite-based approaches 
@@ -44,15 +49,17 @@ Imports: abind, alabama, cli, crayon, expm, future.apply, future,
         polycor, psych, purrr, Rdpack, stats, symmoments, utils
 RdMacros: Rdpack
 RoxygenNote: 7.0.2
-Suggests: dplyr, tidyr, knitr, nnls, prettydoc, rmarkdown, listviewer,
-        testthat, ggplot2
+Suggests: dplyr, tidyr, knitr, nnls, prettydoc, plotly, rmarkdown,
+        listviewer, testthat, ggplot2
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2020-01-11 15:23:39 UTC; mas55yq
-Author: Manuel Rademaker [aut, cre] (<https://orcid.org/0000-0002-8902-3561>),
+Packaged: 2020-03-28 14:46:24 UTC; mas55yq
+Author: Manuel E. Rademaker [aut, cre]
+    (<https://orcid.org/0000-0002-8902-3561>),
   Florian Schuberth [aut] (<https://orcid.org/0000-0002-2110-9086>),
-  Tamara Schamberger [ctb],
+  Tamara Schamberger [ctb] (<https://orcid.org/0000-0002-7845-784X>),
   Michael Klesel [ctb],
-  Theo K. Dijkstra [ctb]
+  Theo K. Dijkstra [ctb],
+  Jörg Henseler [ctb] (<https://orcid.org/0000-0002-9736-3048>)
 Repository: CRAN
-Date/Publication: 2020-01-13 17:20:02 UTC
+Date/Publication: 2020-03-29 11:00:20 UTC

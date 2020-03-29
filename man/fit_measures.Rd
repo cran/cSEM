@@ -2,6 +2,8 @@
 % Please edit documentation in R/helper_assess.R
 \name{fit_measures}
 \alias{fit_measures}
+\alias{calculateChiSquare}
+\alias{calculateChiSquareDf}
 \alias{calculateCFI}
 \alias{calculateGFI}
 \alias{calculateIFI}
@@ -10,11 +12,15 @@
 \alias{calculateRMSEA}
 \alias{calculateRMSTheta}
 \alias{calculateSRMR}
-\title{Internal: Fit measures}
+\title{Model fit measures}
 \usage{
+calculateChiSquare(.object)
+
+calculateChiSquareDf(.object)
+
 calculateCFI(.object)
 
-calculateGFI(.object)
+calculateGFI(.object, .type = c("ML", "ULS"))
 
 calculateIFI(.object)
 
@@ -24,23 +30,23 @@ calculateNNFI(.object)
 
 calculateRMSEA(.object)
 
-calculateRMSTheta(.object, .model_implied = args_default()$.model_implied)
+calculateRMSTheta(.object)
 
 calculateSRMR(
   .object = NULL,
   .matrix1 = NULL,
   .matrix2 = NULL,
-  .saturated = args_default()$.saturated,
+  .saturated = FALSE,
   ...
 )
 }
 \arguments{
 \item{.object}{An R object of class \link{cSEMResults} resulting from a call to \code{\link[=csem]{csem()}}.}
 
-\item{.model_implied}{Logical. Should the RMS_theta be computed using the
-model-implied construct correlation matrix (\code{TRUE}) or the construct correlation matrix
-based on V(eta) = WSW' divided by the square root of the respective
-reliabilities (\code{FALSE}). Defaults to \code{FALSE}.}
+\item{.type}{Character string. Which fitting function should the GFI be based
+on? One of \emph{"ML"} for the maximum likelihood fitting function or \emph{"ULS"} for the
+unweighted least squares fitting function (same as the squared Euclidian distance).
+Defaults to \emph{"ML"}.}
 
 \item{.matrix1}{A \code{matrix} to compare.}
 
@@ -48,20 +54,26 @@ reliabilities (\code{FALSE}). Defaults to \code{FALSE}.}
 
 \item{.saturated}{Logical. Should a saturated structural model be used?
 Defaults to \code{FALSE}.}
+
+\item{...}{Ignored.}
 }
 \value{
 A single numeric value.
 }
 \description{
-Calculate common fit measures.
+Calculate fit measures.
 }
 \details{
-All functions, except for \code{calculateSRMR()} are only applicable to
-objects inheriting class \code{cSEMResults_default}.
-For objects of class \code{cSEMResults_multi} and \code{cSEMResults_2ndorder} use \code{\link[=assess]{assess()}}.
+See the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#fit_indices}{Fit indices}
+section of the \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website}
+for details on the implementation.
 }
 \section{Functions}{
 \itemize{
+\item \code{calculateChiSquare}: The chi square statistic.
+
+\item \code{calculateChiSquareDf}: The ChiSquare statistic divided by its degrees of freedom.
+
 \item \code{calculateCFI}: The comparative fit index (CFI).
 
 \item \code{calculateGFI}: The goodness of fit index (GFI).
@@ -70,7 +82,7 @@ For objects of class \code{cSEMResults_multi} and \code{cSEMResults_2ndorder} us
 
 \item \code{calculateNFI}: The normed fit index (NFI).
 
-\item \code{calculateNNFI}: The non-normed fit index (NNFI).
+\item \code{calculateNNFI}: The non-normed fit index (NNFI). Also called the Tucker-Lewis index (TLI).
 
 \item \code{calculateRMSEA}: The root mean square error of approximation (RMSEA).
 
@@ -79,4 +91,3 @@ For objects of class \code{cSEMResults_multi} and \code{cSEMResults_2ndorder} us
 \item \code{calculateSRMR}: The standardized root mean square residual (SRMR).
 }}
 
-\keyword{internal}

@@ -4,22 +4,39 @@
 \alias{args_assess_dotdotdot}
 \title{Internal: Complete list of assess()'s ... arguments}
 \arguments{
+\item{.absolute}{Logical. Should the absolute HTMT values be returned?
+Defaults to \code{TRUE} .}
+
 \item{.alpha}{An integer or a numeric vector of significance levels.
 Defaults to \code{0.05}.}
 
 \item{.closed_form_ci}{Logical. Should a closed-form confidence interval be computed?
 Defaults to \code{FALSE}.}
 
-\item{.model_implied}{Logical. Should the RMS_theta be computed using the
-model-implied construct correlation matrix (\code{TRUE}) or the construct correlation matrix
-based on V(eta) = WSW' divided by the square root of the respective
-reliabilities (\code{FALSE}). Defaults to \code{FALSE}.}
+\item{.handle_inadmissibles}{Character string. How should inadmissible results
+be treated? One of "\emph{drop}", "\emph{ignore}", or "\emph{replace}". If "\emph{drop}", all
+replications/resamples yielding an inadmissible result will be dropped
+(i.e. the number of results returned will potentially be less than \code{.R}).
+For "\emph{ignore}" all results are returned even if all or some of the replications
+yielded inadmissible results (i.e. number of results returned is equal to \code{.R}).
+For "\emph{replace}" resampling continues until there are exactly \code{.R} admissible solutions.
+Depending on the frequency of inadmissible solutions this may significantly increase
+computing time. Defaults to "\emph{drop}".}
+
+\item{.inference}{Logical. Should critical values be computed? Defaults to \code{FALSE}.}
 
 \item{.null_model}{Logical. Should the degrees of freedom for the null model
 be computed? Defaults to \code{FALSE}.}
 
+\item{.R}{Integer. The number of bootstrap replications. Defaults to \code{499}.}
+
 \item{.saturated}{Logical. Should a saturated structural model be used?
 Defaults to \code{FALSE}.}
+
+\item{.seed}{Integer or \code{NULL}. The random seed to use. Defaults to \code{NULL} in which
+case an arbitrary seed is chosen. Note that the scope of the seed is limited
+to the body of the function it is used in. Hence, the global seed will
+not be altered!}
 
 \item{.type_vcv}{Character string. Which model-implied correlation
 matrix is calculated?
@@ -34,12 +51,15 @@ Most arguments supplied to the \code{...} argument of \code{assess()} are only
 accepted by a subset of the functions called by \code{assess()}. The following
 list shows which argument is passed to which (internal) function:
 \describe{
-\item{.alpha}{Accepted by/Passed down to: \code{\link[=calculateRhoT]{calculateRhoT()}}}
+\item{.absolute}{Accepted by/Passed down to: \code{\link[=calculateHTMT]{calculateHTMT()}}}
+\item{.alpha}{Accepted by/Passed down to: \code{\link[=calculateRhoT]{calculateRhoT()}} and \code{\link[=calculateHTMT]{calculateHTMT()}}}
 \item{.closed_form_ci}{Accepted by/Passed down to: \code{\link[=calculateRhoT]{calculateRhoT()}}}
-\item{.model_implied}{Accepted by/Passed down to: \code{\link[=calculateRMSTheta]{calculateRMSTheta()}}}
+\item{.handle_inadmissibles}{Accepted by/Passed down to: \code{\link[=calculateHTMT]{calculateHTMT()}}}
 \item{.null_model}{Accepted by/Passed down to: \code{\link[=calculateDf]{calculateDf()}}}
+\item{.R}{Accepted by/Passed down to: \code{\link[=calculateHTMT]{calculateHTMT()}}}
 \item{.saturated}{Accepted by/Passed down to: \code{\link[=calculateSRMR]{calculateSRMR()}},
 \code{\link[=calculateDG]{calculateDG()}}, \code{\link[=calculateDL]{calculateDL()}}, \code{\link[=calculateDML]{calculateDML()}}and subsequently \code{\link[=fit]{fit()}}.}
+\item{.seed}{Accepted by/Passed down to: \code{\link[=calculateHTMT]{calculateHTMT()}}}
 \item{.type_vcv}{Accepted by/Passed down to: \code{\link[=calculateSRMR]{calculateSRMR()}},
 \code{\link[=calculateDG]{calculateDG()}}, \code{\link[=calculateDL]{calculateDL()}}, \code{\link[=calculateDML]{calculateDML()}} and subsequently \code{\link[=fit]{fit()}}.}
 }

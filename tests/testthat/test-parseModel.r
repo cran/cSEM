@@ -61,7 +61,6 @@ imag1 ~~ expe1
 "
 
 ## Tests
-
 test_that("Linear model: incorrectly specified models provide an error", {
   
   expect_error(parseModel(model2))
@@ -106,6 +105,40 @@ IMAG ~~ EXPE
 test_that("Linear model: correctly specified models are correctly returned", {
   expect_s3_class(parseModel(model), "cSEMModel")
   expect_output(str(parseModel(model)), "List of 13")
+})
+
+## 3. Only measurement model (no structural model) -----------------------------
+# 3.1 Only one measurement equation
+model1 <- "
+# Composite model
+IMAG <~ imag1 + imag2 + imag3
+"
+
+# 3.2 Only measurement equations without construct correlations given
+model2 <- "
+# Measurement and composite model
+EXPE =~ expe1 + expe2
+IMAG <~ imag1 + imag2
+"
+
+# 3.3 Two measurement equations and correlation given
+model3 <- "
+# Construct correlations
+EXPE ~~ IMAG
+
+# Measurement and composite model
+EXPE =~ expe1 + expe2
+IMAG <~ imag1 + imag2
+"
+
+test_that("Linear model: incorrectly specified models provide an error", {
+  expect_error(parseModel(model1))
+  expect_error(parseModel(model2))
+})
+
+test_that("Linear model: correctly specified models are correctly returned", {
+  expect_s3_class(parseModel(model3), "cSEMModel")
+  expect_output(str(parseModel(model3)), "List of 13")
 })
 
 ### Nonlinear models ===========================================================
@@ -395,3 +428,21 @@ test_that("Second-order model: correctly specified models are correctly returned
   expect_s3_class(parseModel(model1), "cSEMModel")
   expect_output(str(parseModel(model1)), "List of 13")
 })
+
+## .check errors argument ======================================================
+models <- list(
+  'C ~ A', # single path
+  "B =~ x21", # single loading
+  "D <~ x41", # single weight
+  "A ~ C", # wrong single path, both constructs exist
+  "D ~ E", # wrong path as construct E does not exist
+  "B =~ x31",# wrongly assigned indicator
+  "D <~ x51" # Indicator that does not exist
+  )
+
+for(i in seq_along(models)) {
+  test_that(paste0("Model: ", models[[i]], " does not throw an error when .check_errors = FALSE."), {
+    expect_s3_class(parseModel(models[[i]], .check_errors = FALSE), "cSEMModel")
+    expect_output(str(parseModel(models[[i]], .check_errors = FALSE)), "List of 13")
+  })
+}

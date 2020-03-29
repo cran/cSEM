@@ -1,4 +1,4 @@
-\donttest{# ===========================================================================
+# ===========================================================================
 # Using the threecommonfactors dataset
 # ===========================================================================
 model <- "
@@ -22,7 +22,7 @@ a$HTMT
 # You may also just compute a subset of the quality criteria
 assess(res, .quality_criterion = c("ave", "rho_C", "htmt"))
 
-## Resampling ---------------------------------------------------------------
+\donttest{## Resampling ---------------------------------------------------------------
 # To resample a given quality criterion use csem()'s .user_funs argument
 # Note: The output of the quality criterion needs to be a vector or a matrix.
 #       Matrices will be vectorized columnwise.
@@ -38,4 +38,18 @@ res$Estimates$Estimates_resample$Estimates1$User_fun$Resampled[1:4, ]
 ## Use infer() to compute e.g. the 95% percentile confidence interval
 res_infer <- infer(res, .quantity = "CI_percentile")
 res_infer$User_fun 
+
+## Several quality criteria can be resampeled simultaneously
+res <- csem(threecommonfactors, model, 
+            .resample_method = "bootstrap",
+            .R               = 40,
+            .user_funs       = list(
+              "HTMT" = cSEM:::calculateHTMT,
+              "SRMR" = cSEM:::calculateSRMR,
+              "RMS_theta" = cSEM:::calculateRMSTheta
+            ),
+            .tolerance = 1e-04
+)
+res$Estimates$Estimates_resample$Estimates1$HTMT$Resampled[1:4, ]
+res$Estimates$Estimates_resample$Estimates1$RMS_theta$Resampled[1:4]
 }

@@ -8,6 +8,9 @@
 \item{.alpha}{An integer or a numeric vector of significance levels.
 Defaults to \code{0.05}.}
 
+\item{.absolute}{Logical. Should the absolute HTMT values be returned?
+Defaults to \code{TRUE} .}
+
 \item{.approach_gcca}{Character string. The Kettenring approach to use for GCCA. One of
 "\emph{SUMCORR}", "\emph{MAXVAR}", "\emph{SSQCORR}", "\emph{MINVAR}" or "\emph{GENVAR}". Defaults to
 "\emph{SUMCORR}".}
@@ -31,16 +34,15 @@ Only use if you know what you are doing.}
 
 \item{.approach_mgd}{Character string or a vector of character strings.
 Approach used for the multi-group comparison. One of: "\emph{all}", "\emph{Klesel}", "\emph{Chin}",
-"\emph{Sarstedt}", "\emph{Keil}, "\emph{Nitzl}", or "\emph{Henseler}".
-Default to "\emph{all}" in which case all approaches are computed (if possible).
-Note that the output will be quite long in this case.}
+"\emph{Sarstedt}", "\emph{Keil}, "\emph{Nitzl}", "\emph{Henseler}", "\emph{CI_para}", or "\emph{CI_overlap}".
+Default to "\emph{all}" in which case all approaches are computed (if possible).}
 
 \item{.approach_nl}{Character string. Approach used to estimate nonlinear
 structural relationships. One of: "\emph{sequential}" or "\emph{replace}".
 Defaults to "\emph{sequential}".}
 
 \item{.approach_p_adjust}{Character string or a vector of character strings.
-Approach used to adjust the p-value in multiple testing.
+Approach used to adjust the p-value for multiple testing.
 See the \code{methods} argument of \code{\link[stats:p.adjust]{stats::p.adjust()}} for a list of choices and
 their description. Defaults to "\emph{none}".}
 
@@ -79,6 +81,8 @@ Defaults to \code{FALSE}.}
 \item{.ci}{A vector of character strings naming the confidence interval to compute.
 For possible choices see \code{\link[=infer]{infer()}}.}
 
+\item{.ci_colnames}{Internal argument used by several print helper functions.}
+
 \item{.closed_form_ci}{Logical. Should a closed-form confidence interval be computed?
 Defaults to \code{FALSE}.}
 
@@ -99,6 +103,8 @@ data (indicators/items/manifest variables). Possible column types or classes
 of the data provided are: "\code{logical}", "\code{numeric}" ("\code{double}" or "\code{integer}"),
 "\code{factor}" ("\code{ordered}" and/or "\code{unordered}"), "\code{character}" (converted to factor),
 or a mix of several types.}
+
+\item{.dependent}{Character string. The name of the dependent variable. Defaults to \code{NULL}.}
 
 \item{.disattenuate}{Logical. Should composite/proxy correlations
 be disattenuated to yield consistent loadings and path estimates if at least
@@ -122,6 +128,8 @@ Default to \code{NULL}.}
 
 \item{.E}{A (J x J) matrix of inner weights.}
 
+\item{.effect}{Internal argument used by helper printEffects().}
+
 \item{.estimate_structural}{Logical. Should the structural coefficients
 be estimated? Defaults to \code{TRUE}.}
 
@@ -131,6 +139,12 @@ all available cores will be used. Defaults to "\emph{sequential}".}
 
 \item{.first_resample}{A list containing the \code{.R} resamples based on the original
 data obtained by resamplecSEMResults().}
+
+\item{.force}{Logical. Should .object be resampled even if it contains resamples
+already?. Defaults to \code{FALSE}.}
+
+\item{.fit_measures}{Logical. (EXPERIMENTAL) Should additional fit measures
+be included? Defaults to \code{FALSE}.}
 
 \item{.full_output}{Logical. Should the full output of summarize be printed.
 Defaults to \code{TRUE}.}
@@ -150,6 +164,14 @@ computing time. Defaults to "\emph{drop}".}
 \item{.id}{Character string or integer. A character string giving the name or
 an integer of the position of the column of \code{.data} whose levels are used
 to split \code{.data} into groups. Defaults to \code{NULL}.}
+
+\item{.inference}{Logical. Should critical values be computed? Defaults to \code{FALSE}.}
+
+\item{.independent}{Character string. The name of the independent variable. Defaults to \code{NULL}.}
+
+\item{.independent_1}{Character string. The name of the first independent variable. Defaults to \code{NULL}.}
+
+\item{.independent_2}{Character string. The name of the second independent variable. Defaults to \code{NULL}.}
 
 \item{.instruments}{A named list of vectors of instruments. The names
 of the list elements are the names of the dependent (LHS) constructs of the structural
@@ -172,18 +194,16 @@ If the algorithm exceeds the specified number, weights of iteration step
 \item{.model}{A model in \link[lavaan:model.syntax]{lavaan model syntax}
 or a \link{cSEMModel} list.}
 
-\item{.model_implied}{Logical. Should the RMS_theta be computed using the
-model-implied construct correlation matrix (\code{TRUE}) or the construct correlation matrix
-based on V(eta) = WSW' divided by the square root of the respective
-reliabilities (\code{FALSE}). Defaults to \code{FALSE}.}
+\item{.moderator}{Character string. The name of the moderator variable. Defaults to \code{NULL}.}
 
 \item{.modes}{A vector giving the mode for each construct in the form \code{"name" = "mode"}.
 Only used internally.}
 
 \item{.n}{Integer. The number of observations of the original data.}
 
-\item{.n_spotlights}{Integer. A numeric value giving the number of spotlights (= values of .z)
-between min(.z) and max(.z) to use. Defaults to \code{100}.}
+\item{.n_steps}{Integer. A numeric value giving the number of steps, e.g., in
+surface analysis or floodlight analysis the spotlights (= values of .moderator)
+between min(.moderator) and max(.moderator) to use. Defaults to \code{100}.}
 
 \item{.normality}{Logical. Should joint normality of
 \eqn{[\eta_{1:p}; \zeta; \epsilon]}{[\eta_(1:p); \zeta; \epsilon]}
@@ -208,8 +228,8 @@ Defaults to \code{TRUE}.}
 
 \item{.parameters_to_compare}{A model in \link[lavaan:model.syntax]{lavaan model syntax} indicating which
 parameters (i.e, path (\code{~}), loadings (\verb{=~}), weights (\verb{<~}), or correlations (\verb{~~})) should be
-compared across groups. Defaults to \code{NULL} in which case all parameters of the
-originally specified model are compared.}
+compared across groups. Defaults to \code{NULL} in which case all weights, loadings and
+path coefficients of the originally specified model are compared.}
 
 \item{.PLS_approach_cf}{Character string. Approach used to obtain the correction
 factors for PLSc. One of: "\emph{dist_squared_euclid}", "\emph{dist_euclid_weighted}",
@@ -310,6 +330,9 @@ be used to handle flipping signs when resampling? One of "\emph{none}","\emph{in
 \item{.stage}{Character string. The stage the model is needed for.
 One of "\emph{first}" or "\emph{second}". Defaults to "\emph{first}".}
 
+\item{.standardized}{Logical. Should standardized scores be returned? Defaults
+to \code{TRUE}.}
+
 \item{.starting_values}{A named list of vectors where the
 list names are the construct names whose indicator weights the user
 wishes to set. The vectors must be named vectors of \code{"indicator_name" = value}
@@ -322,6 +345,15 @@ training data.}
 
 \item{.tolerance}{Double. The tolerance criterion for convergence.
 Defaults to \code{1e-05}.}
+
+\item{.type_ci}{Character string. It indicates which confidence interval should be calculated.
+For possible choices, see the \code{.quantity} argument of the \code{\link{infer}} function.
+In the test_mgd function default is to "\emph{CI_percentile}".}
+
+\item{.type}{Character string. Which fitting function should the GFI be based
+on? One of \emph{"ML"} for the maximum likelihood fitting function or \emph{"ULS"} for the
+unweighted least squares fitting function (same as the squared Euclidian distance).
+Defaults to \emph{"ML"}.}
 
 \item{.type_vcv}{Character string. Which model-implied correlation
 matrix is calculated?
@@ -347,6 +379,8 @@ Defaults to \code{FALSE}.}
 
 \item{.W}{A (J x K) matrix of weights.}
 
+\item{.what}{Internal argument used by several print helper functions.}
+
 \item{.W_new}{A (J x K) matrix of weights.}
 
 \item{.W_old}{A (J x K) matrix of weights.}
@@ -354,16 +388,10 @@ Defaults to \code{FALSE}.}
 \item{.weighted}{Logical. Should estimation be based on a score that uses
 the weights of the weight approach used to obtain \code{.object}?. Defaults to \code{FALSE}.}
 
-\item{.x}{Character string. The name of the moderator variable. Defaults to \code{NULL}.}
-
 \item{.X}{A matrix of processed data (scaled, cleaned and ordered).}
 
 \item{.X_cleaned}{A data.frame of processed data (cleaned and ordered). Note: \code{X_cleaned}
 may not be scaled!}
-
-\item{.y}{Character string. The name of the dependent variable. Defaults to \code{NULL}.}
-
-\item{.z}{Character string. The name of the independent variable. Defaults to \code{NULL}.}
 }
 \description{
 An alphabetical list of all arguments used by functions of the \code{cSEM} package

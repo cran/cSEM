@@ -19,6 +19,7 @@ bibliography: ../inst/REFERENCES.bib
 <!-- used to print boldface greek symbols (\mathbf only works for latin symbols) -->
 ```{r child="preamble-tex.tex", echo=FALSE, include=FALSE}
 ```
+
 # Introduction
 As indicated by the name, `assess()` is used to assess a model estimated using the
 `csem()` function.
@@ -51,6 +52,9 @@ Currently the following quality criteria are implemented:
     - The **squared Euclidian distance** (DL)
     - The **maximum-likelihood distance** (DML)
 - Fit indices
+    - The $\chi^2$-**statistic**
+    - The $\chi^2/df$-**statistic**
+    - The **comparative fit index** (CFI)
     - The **goodness-of-fit index** (GFI) 
     - The **standardized root mean square residual** (SRMR)
     - The **root mean square error of approximation** (RMSEA)
@@ -64,20 +68,24 @@ Currently the following quality criteria are implemented:
   well as for Mode B regression equations (if `.approach_weights = "PLS-PM"`).
 - The coefficient of determination and the adjusted coefficient of determination
   ($R^2$ and $R^2_{adj}$)
-- A measure of the **effect size** ($f^2$).
+- A measure of the **effect size** (Cohen's $f^2$).
+- Direct, indirect and total effect assessment.
 
 
 For implementation details see the [Methods & Formulae](#methods) section.
 
-## Syntax & Options
+# Syntax & Options
 
 ```{r eval=FALSE}
 assess(
-  .object              = NULL,
-  .only_common_factors = TRUE,
-  .quality_criterion   = c("all", "ave", "rho_C", "rho_C_weighted", "cronbachs_alpha", 
+  .object              = NULL, 
+  .only_common_factors = TRUE, 
+  .quality_criterion   = c("all", "ave", "rho_C", "rho_C_mm", "rho_C_weighted", 
+                           "rho_C_weighted_mm", "cronbachs_alpha", 
                            "cronbachs_alpha_weighted", "dg", "dl", "dml", "df",
-                           "esize", "cfi", "gfi", "ifi", "nfi", "nnfi", 
+                           "f2", "chi_square", "chi_square_df",
+                           "cfi", "gfi", "ifi", "nfi", "nnfi", 
+                           "reliability",
                            "rmsea", "rms_theta", "srmr",
                            "gof", "htmt", "r2", "r2_adj",
                            "rho_T", "rho_T_weighted", "vif", 
@@ -109,6 +117,11 @@ assess(
    See [args_assess_dotdotdot][dotdotdot] 
    for a complete list of available arguments.
 
+Like all postestimation functions `assess()` can be called on any object of
+class `cSEMResults`. The output is a named list of the quality criteria given
+to `.quality_criterion`. By default all possible quality criteria 
+a calculated (`.quality_criterion = "all"`).
+
 ## Details {#details}
 In line with all of **cSEM**'s postestimation functions, `assess()` is a generic 
 function with methods for objects of class `cSEMResults_default`, 
@@ -124,19 +137,26 @@ In this case only objects of class `cSEMResults_default` are accepted as this
 ensures a specific structure. Therefore, it is important to remember that
 *internal functions in **cSEM** are generally **not** generic*!
 
+> Update (24.02.2020): from version 0.2.0 onwards all functions that assess() calls internally
+  will be exported. This mean users can directly invoke functions such as e.g.,
+  `calculateHTMT()` or `calculateRhoT()`. These functions will also be generic 
+  accepting all types of cSEMResults classes.
+
+### Composite models vs. common factor models
+
 Some assessment measures are inherently tied to the common factor model. It
 is therefore unclear how to interpret their results in the context of a 
 composite model. Consequently, their computation is suppressed by default for 
-constructs modeled as common factors. Currently, this applies to the following
+constructs modeled as composites. Currently, this applies to the following
 quality criteria: 
 
 - AVE and validity assessment based theron (i.e., the Fornell-Larcker criterion)
 - HTMT and validity assessment based theron
-- All reliability measures (congeneric, tau-equivalent, Cronbach's alpha)
+- All reliability measures
  
 It is possible to force computation of all quality criteria for constructs
-modeled as composites, however, we explicitly warn to interpret results, 
-as they may not even have a conceptual meaning.
+modeled as composites using `.only_common_factors = FALSE`, however, we explicitly
+warn to interpret results, as they may not even have a conceptual meaning.
 
 All quality criteria assume that the estimated loadings, construct correlations 
 and path coefficients involved in the computation of a specific qualitiy measure
@@ -145,16 +165,7 @@ the user deliberately chooses an approach that yields inconsistent estimates (by
 setting `.disattenuate = FALSE` in `csem()` when the estimated model contains constructs
 modeled as common factors) `assess()` will still estimate
 all quantities, however, quantities such as
-the AVE or the congeneric reliability $\rho_C$ inherit inconsistency making their 
-interpretation at the very least dubious.
-
-
-# Usage
-
-Like all postestimation functions `assess()` can be called on any object of
-class `cSEMResults`. The output is a named list of the quality criteria given
-to `.quality_criterion`. By default all possible quality criteria 
-a calculated (`.quality_criterion = "all"`).
+the AVE or the congeneric reliability $\rho_C$ inherit inconsistency.
 
 # Methods & Formulae {#methods}
 
@@ -181,8 +192,9 @@ common definitions are given below:
   relative to the sum of the total indicator variances (total variation, i.e., 
   the sum of the indicator variances of all indicators connected to the construct).
 - Since for the regression of $x_k$ on $\eta_k$, the R squared ($R^2_k)$ is equal to the
-  share of the explained variation of $x_k$ relative to the share of total variation of $x_k$,
-  The AVE for a generic construct/latent variable $\eta$ is equal to the average over all $R^2_k$. 
+  share of variation of $x_k$ explained by $\eta_k$ relative to the total 
+  variation of $x_k$, the AVE for a generic construct/latent variable $\eta$ 
+  is equal to the average over all $R^2_k$. 
 - The AVE for a generic construct/latent variable $\eta$ is the sum of the 
   squared correlation between indicator $x_k$ and
   the (indicator) true score $\eta_k$ relative to the sum of the indicator variances of 
@@ -190,6 +202,14 @@ common definitions are given below:
 
 It is important to stress that, although different in wording, all definitions 
 are synonymous! 
+
+The AVE is inherently tied to the common factor model. It
+is therefore unclear how to interpret the AVE for constructs modeled as composites. 
+Consequently, the computation is suppressed by default for 
+constructs modeled as common factors. It is possible to force computation of the
+AVE for constructs modeled as composites using `.only_common_factors = FALSE`, 
+however, we explicitly warn to interpret results, as they may not even have a 
+conceptual meaning.
 
 ### Formulae
 Using the results and notation derived and defined in the [Notation][Notation] help file,
@@ -221,11 +241,82 @@ using R's `:::` mechanism.
 The AVE is the basis for the Fornell-Larcker criterion.
 
 ## Degrees of freedom{#df}
-### Definition 
+
+### Definition
+
+Degrees of freedom are calculated as the difference between the number 
+of non-redundant free elements of the empirical indicator correlation matrix $\bm{S}$
+and the model parameters. 
+
+Although, composite-based estimators retrieve parameters of the 
+postulated models by forming composites, which involves the estimation of weights
+the computation of the degrees of freedom eventually depends on the postulated 
+model and the parameters implied by the model.
+Most notably, a common factor model estimated by a composite-based
+approach such as PLS has the same degrees of freedom compared to e.g., classical
+maximum likelihood estimation of the same model.
+
+### Formulae
+
+$$ 
+\begin{align} 
+df &= \text{# non-redundant off-diagonal elements of the empirical indicator correlation matrix $\bm{S}$} \\
+      &- \text{# model parameters}
+\end{align}
+$$
+
+If the model contains only linear terms the model parameters are:
+
+- \# free correlations between exogenous constructs
+- \# specified correlations between endogenous constructs
+- \# structural parameters
+
+In addition, for each construct $\eta_j$:
+
+- \# of loadings if $\eta_j$ is modeled as a common factor
+- \# of specified measurement error correlations between items of constructs
+    $\eta_j$ if $\eta_j$ is modeled as a common factor
+- \# of weights of $\eta_j$ __minus 1__ if $\eta_j$ is modeled as a composite. One 
+  weight per block is fixed and hence not counted as a model parameter since
+  the variance of the composite is scaled to be unity.
+- \# of non-redundant off-diagonal elements of $\bm{\Sigma}_j$ if $\eta_j$ is modeled as 
+  a composite.
+
+If the model contains second-order terms the model parameters are similar:
+
+- \# free correlations between exogenous constructs
+- \# specified correlations between endogenous constructs
+- \# structural parameters. Note: relations between constructs measuring/forming
+  the second-order construct are not path!
+
+In addition, for each construct $\eta_j$ (including the second-order constructs):
+
+- \# of loadings if $\eta_j$ is modeled as a common factor
+- \# of specified measurement error correlations between items of constructs
+    $\eta_j$ if $\eta_j$ is modeled as a common factor
+- \# of weights of $\eta_j$ __minus 1__ if $\eta_j$ is modeled as a composite. One 
+  weight per block is fixed and hence not counted as a model parameter since
+  the variance of the composite is scaled to be unity.
+- \# of non-redundant off-diagonal elements of $\bm{\Sigma}_j$ if $\eta_j$ is modeled as 
+  a composite.
+
+#### Notes
+1. If all constructs are allowed to freely covary, i.e., there is no 
+   structural model and no structural parameters, all constructs are considered
+   exogenous.
+2. If the strucutral model contains nonlinear terms (e.g., $\eta^2_1$ or $\eta_1\eta_2$),
+   degrees of freedom computation is currently unclear (at least to us).
+   A warning is printed to inform the user that the calculation is may not be
+   correct.
 
 ### Implementation
+The function is implemented as `calculateDf()`.
+
+### See also:
+Degrees of freedom are required for several [fit measures](#fit_indices).
 
 ## Fit Indices {#fit_indices}
+
 ### Definition
 Fit indices for confirmatory factor analysis (CFA) were first introduced by @Bentler1980. 
 Since then a large number of indices has been defined. Contrary to exact tests 
@@ -258,6 +349,10 @@ arbitrary cutoff value.
 
 The definitions of fit indices calculated by `assess()` are given in the following:
 
+- The $\chi^2$-**statistic** is the value of the fitting function times the
+  sample size minus 1.
+- The $\chi^2/df$-ratio is the $\chi^2$-statistic divided by its
+  degrees of freedom.
 - The **goodness-of-fit index** (GFI) measures the relative increase in fit of 
   the specified model compared to no model at all. 
 - The **standardized root mean square residual** (SRMR) is the square root of
@@ -314,6 +409,21 @@ stands for the value of a fitting function evaluated at $S$
 In the context of composite-based estimators, the distance measures $d_{G}$ 
 (geodesic distance), $d_{L}$ (squared Euclidian distance) and $d_{ML}$
 (maximum likelihood distance) serve as fitting functions.
+
+#### The $\chi^2$-statistic
+The $\chi^2$-**statistic** is defined as:
+$$ \chi^2 = (N-1)\cdot F(S, \hat{\Sigma})$$
+where $F(S, \hat{\Sigma})$ is the maximum likelihood distance function $d_{ML}$ and $N$ the sample size.
+
+Main reference: @Joereskog1969
+
+#### The $\chi^2/df$-ratio
+The $\chi^2$-**statistic** is defined as:
+$$ \chi^2 = (N-1)\cdot F(S, \hat{\Sigma})/df_M$$
+where $F(S, \hat{\Sigma})$ is the maximum likelihood distance function $d_{ML}$, $N$ the sample size and
+$df_M$ the degrees of the estimated model.
+
+Main reference: @Joereskog1969
 
 #### The goodness-of-fit index (GFI)
 The GFI is defined as:
@@ -422,7 +532,8 @@ the entry at position $(j,i)$ of the (NA-modified) matrix $\Theta$ and $n$ is
 the number of non-NA entries below the diagonal of $\Theta$.
 
 ### Implementation
-The functions are implemented as: `calculateCFI()`, `calculateNFI()`, 
+The functions are implemented as: `calculateChiSquare()`, `calculateChiSquareDf()`, 
+`calculateCFI()`, `calculateNFI()`, 
 `calculateNNFI()`, `calculateIFI()`, `calculateGFI()`, `calculateRMSEA()`, 
 `calculateRMSTheta()`, `calculateSRMR()`. They may be called directly 
 using R's `:::` mechanism.
@@ -449,7 +560,7 @@ which provides the foundation for the measurement model described
 in the [Notation][Notation] help file. 
 Based on the true score framework and using the terminology and notation of
 the [Notation][Notation] and [Termniology][Terminology] help files, reliability 
-is defined as:
+of a generic measurement is defined as:
 
 1. The amount of proxy true score variance, $Var(\bar\eta)$, relative to the 
    the proxy or test score variance, $Var(\hat\eta)$.
@@ -465,43 +576,44 @@ to the formulae written below. The well-established names for the different
 types of measurement model provide natural naming candidates for their corresponding
 (internal consistency) reliabilities measure:
 
-1. **Parallel** -- Assumption: $\eta_k = \eta \longrightarrow \lambda_k = \lambda$ and $Var(\varepsilon_k) = Var(\varepsilon)$.
-1. **Tau-equivalent** -- Assumption: $\eta_k = \eta \longrightarrow \lambda_k = \lambda$ and $Var(\varepsilon_k) \neq Var(\varepsilon_l)$.
-1. **Congeneric** -- Assumption: $\eta_k = \lambda_k\eta$ and $Var(\varepsilon_k) \neq Var(\varepsilon_l)$.
+1. **Parallel** -- Assumption: $\eta_{kj} = \eta_j \longrightarrow \lambda_{kj} = \lambda_j$ and $Var(\varepsilon_{kj}) = Var(\varepsilon_j)$.
+1. **Tau-equivalent** -- Assumption: $\eta_{kj} = \eta_j \longrightarrow \lambda_{kj} = \lambda_j$ and $Var(\varepsilon_{kj}) \neq Var(\varepsilon_{lj})$.
+1. **Congeneric** -- Assumption: $\eta_{kj} = \lambda_{kj}\eta_j$ and $Var(\varepsilon_{kj}) \neq Var(\varepsilon_{lj})$.
 
-In principal the test score $\hat\eta$ is weighted linear combinations of 
+In principal the test score $\hat\eta$ is a weighted linear combinations of 
 the indicators, i.e., a proxy or stand-in for the true score/common factor. 
 Historically, however, the test score is generally assumed to be a simple sum 
-score,i.e., a weighted sum of indicators with all weights assumed to be equal to 
-one. Hence, well-known reliability measures such as Cronbach's alpha are definied
+score, i.e., a weighted sum of indicators with all weights assumed to be equal to 
+one. Hence, well-known reliability measures such as Jöreskog's $\rho$ or Cronbach's $\alpha$ are defined
 with respect to a test score that indeed represents a simple sum score. 
-Yet, all reliability measures originally developped assuming a sum score may 
+Yet, all reliability measures originally developed assuming a sum score may 
 equally well be computed with respect to a composite, i.e., a weighted score 
 with weights not necessarily equal to one.
 
-Apart form the distinction between congeneric and tau-equivalent reliability 
-(Cronbach's alpha) we therefore distinguish between reliability estimates based on
+Apart form the distinction between congeneric (i.e., Jöreskog's $\rho$) and tau-equivalent reliability 
+(i.e., Cronbach's $\alpha$) we therefore distinguish between reliability estimates based on
 a test score (composite) that uses the weights of the weight approach used 
 to obtain `.object` and a test score (proxy) based on unit weights. The former
-is indicated by adding "**weighted**" to the original name.
+is indicated by adding "**weighted**" to the original name. 
 
 ### Formulae
 
-The most general formula for reliability is the **weighted congeneric reliability**:
+The most general formula for reliability is the **(weighted) congeneric reliability**:
 
 $$ \rho_{C; \text{weighted}} = \frac{Var(\bar\eta)}{Var(\hat\eta_k)} = \frac{(\bm{w}'\bm{\lambda})^2}{\bm{w}'\bm{\Sigma}\bm{w}}$$
-Assuming $w_k = 1$, i.e. unit weights, the "classical" formula for congeneric reliability follows:
+Assuming $\bm w = \bm\iota$, i.e., unit weights, the "classical" formula for congeneric reliability
+(i.e., Jöreskog's $\rho$), follows:
 $$ \rho_C = \frac{Var(\bar\eta)}{Var(\hat\eta_k)} = \frac{\left(\sum\lambda_k\right)^2}{\left(\sum\lambda_k\right)^2 + Var(\bar\varepsilon)}$$
 Using the assumptions imposed by the tau-equivalent measurement model we obtain
-the **weighted tau-equivalent reliability (weighted Cronbach's alpha)**:
+the **(weighted) tau-equivalent reliability, i.e., (weighted) Cronbach's alpha)**:
 
 $$ \rho_{T; \text{weighted}}  = \frac{\lambda^2(\sum w_k)^2}{\lambda^2(\sum w_k)^2 + \sum w_k^2Var(\varepsilon_k)}
  = \frac{\bar\sigma_x(\sum w_k)^2}{\bar\sigma_x[(\sum w_k)^2 - \sum w_k^2] + \sum w_k^2Var(x_k)}$$
 where we used the fact that if $\lambda_k = \lambda$ (tau-equivalence), 
-$\lambda^2_k$ equals the average covariance between indicators:
+$\lambda^2$ equals the average covariance between indicators:
  $$\bar\sigma_x = \frac{1}{K(K-1)}\sum^K_{k=1}\sum^K_{l=1} \sigma_{kl}$$
-Again, assuming $w_k = 1$, i.e. unit weights, the "classical" formula for 
-tau-equivalent reliability (Cronbach's alpha) follows:
+Again, assuming $w_k = 1$, i.e., unit weights, the "classical" formula for 
+tau-equivalent reliability (Cronbach's $\alpha$) follows:
 $$ \rho_T = \frac{\lambda^2K^2}{\lambda^2K^2 + \sum Var(\bar\varepsilon_k)}
  = \frac{\bar\sigma_xK^2}{\bar\sigma_x[K^2 - K] + K Var(x_k)}$$
 Using the assumptions imposed by the parallel measurement model we obtain
@@ -510,40 +622,46 @@ the **parallel reliability**:
 $$ \rho_P = \frac{\lambda^2(\sum w_k)^2}{\lambda^2(\sum w_k)^2 + Var(\varepsilon)\sum w_k^2} = 
  \frac{\bar\sigma_x(\sum w_k)^2}{\bar\sigma_x[(\sum w_k)^2 - \sum w_k^2] + Var(x)\sum w_k^2} $$
 
-In **cSEM** indicators are always standardized and weights are choosen such 
-that $Var(\hat\eta_k) = 1$. This significantly simplifies the formulae and 
-$\rho_T = \rho_P$ are in fact identical:
-
+In **cSEM** indicators are always standardized and weights are chosen such 
+that $Var(\hat\eta_k) = 1$. This is done by scaling the weight vector $\bm{w}$
+by $(\bm{w}'\bm{\Sigma}\bm{w})^{-\frac{1}{2}}$. This simplifies the
+formulae:
 $$
 \begin{align}
 \rho_{C; \text{weighted}} &= (\sum w_k\lambda_k)^2 = (\bm{w}'\bm{\lambda})^2 \\
-\rho_C &=  (\sum \lambda_k)^2 \\
 \rho_{T; \text{weighted}} = \rho_{P; \text{weighted}} &=  \bar\rho_x(\sum w_k)^2 \\
-\rho_{T} = \rho_P = \bar\rho_x K^2
 \end{align}
 $$
-
 where $\bar\rho_x = \bar\sigma_x$ is the average correlation between indicators. Consequently,
 parallel and tau-equivalent reliability are always identical in **cSEM**.
 
-<!-- It is important to realize that $\rho_T$ ($\rho_P$) based on the average covariance/ -->
-<!-- correlation (if $x_k$ is standardized as it is always the case in **cSEM**) are nested within the  -->
-<!-- general formula, however, **if and only if the assumptions of the tau-equivalent -->
-<!-- and/or the parallel model hold do they represent reliability measures.** -->
-<!-- In pratice, these assumptions are unlikely to hold. We therefore explicitly discourage -->
-<!-- their use as congeneric reliability is virtually always preferable in empirical -->
-<!-- work! In fact, as shown above, congeneric reliability is identical to the  -->
-<!-- tau-equivalent/parallel reliability *if their respective assumptions actually hold*, -->
-<!-- essentially offering robustness against violation of the tau-equivalence and/or -->
-<!-- parallel measurement assumption. -->
+So far formulae have been motivated theoretically. Since $\bm{\Sigma}$ is unknown
+it can be replaced by $\bm{S}$ (the empirical indicator correlation matrix) or 
+$\hat{\bm{\Sigma}}$ (the model-implied indicator correlation matrix), however, 
+$\bm{S}$ and $\hat{\bm{\Sigma}}$ are generally not equal. The practical implication 
+is that if $\rho_{C}$ is computed as $(\bm{w}'\bm{\lambda})^2$ using unit weights 
+the weights can in fact be scaled by both $(\bm{w}'\bm{S}\bm{w})^{-\frac{1}{2}}$ 
+or $(\bm{w}'\hat{\bm{\Sigma}}\bm{w})^{-\frac{1}{2}}$! Similarly, $\rho_{C; \text{weighted}}$
+can be computed using weights scaled using either $\bm{S}$ or $\hat{\bm{\Sigma}}$.
+Consequently there are in fact four types of congeneric reliability depending the type
+of weight and the type of scaling for the weights. Hence, the calculation is 
+of "the" congeneric reliability is always:
+$$(\bm{w}'\bm{\lambda})^2$$
+where $\bm{w}$ can be: 
 
-#### Closed-form confidence interval
-
-@Trinchera2018 proposed a closed-form confidence interval (CI) for
-the tau-equivalent reliability (Cronbach's alpha). To compute the CI, set
-`.closed_form_ci = TRUE` when calling `assess()` or invoke 
-`calculateRhoT(..., .closed_form_ci = TRUE)` directly. The level of the CI
-can be changed by supplying a single value or a vector of values to `.alpha`.
+1. a vector of unit weights scaled by $(\bm{w}'\hat{\bm{\Sigma}}\bm{w})^{-\frac{1}{2}}$. This
+   is typically what people refer to as *the* congeneric reliability (Jöreskog's $\rho$).
+   We label this type of reliability estimate $\rho_C$.
+1. a vector of unit weights scaled by $(\bm{w}'\bm{S}\bm{w})^{-\frac{1}{2}}$.
+   This has no known name. Its usefulness is an open question. We label this type
+   of reliability estimate $\rho_{C;mm}$.
+1. a vector of weights obtained using a composite-based estimator (e.g. PLS-PM)
+   scaled by $(\bm{w}'\bm{S}\bm{w})^{-\frac{1}{2}}$. This is
+   Dijkstra Henseler's $\rho_A$. We label this type of reliability estimate $\rho_{C;\text{weighted}}$.
+1. a vector of weights obtained using a composite-based estimator (e.g. PLS-PM)
+   scaled by $(\bm{w}'\hat{\bm{\Sigma}}\bm{w})^{-\frac{1}{2}}$.
+   This has no known name. Its usefulness is an open question.
+   We label this type of reliability estimate $\rho_{C;\text{weighted};mm}$
 
 #### A note on the terminology
 
@@ -555,7 +673,7 @@ or applied users whose primary concern is to apply the appropriate method
 to the appropriate case without poring over books and research papers
 to understand each intricate detail.
 
-In **cSEM** we seek to make working with reliabilities as consistent and easy as
+In **cSEM** we seek to make working with reliabilities as consistent as
 possible by relying on a paper by @Cho2016 who proposed uniform 
 formula-generating methods and a systematic naming conventions for all
 common reliability measures. Naturally, some of the conventional terminonolgy 
@@ -583,17 +701,29 @@ different naming systems and conventions we provide a "translation table" below:
 
  Tau-equivalent reliability        $\rho_T$                      Cronbach's alpha, $\alpha$, Coefficient alpha
                                                                  Guttmans $\lambda_3$, KR-20
+
+ Tau-equivalent reliability        $\rho_{T;\text{weighted}}$    --
+ weighted  
   
  Congeneric reliability            $\rho_C$                      Composite reliability, Jöreskog's $\rho$,
                                                                  Construct reliability, $\omega$,
                                                                  reliability coefficient, Dillon-Goldsteins's $\rho$
                                                                  
- Weighted Congeneric reliability   $\rho_{C;\text{weighted}}$    $\rho_A$, $\rho_B$
+ Congeneric reliability            $\rho_{C;\text{weighted}}$    Dijkstra-Henseler's $\rho_A$
+ weighted
 -----------------------------------------------------------------------------------------------------------------
 
 Table: Systematic names and common synonymous names for the
-reliability found in the literature
+reliability estimates found in the literature
 </center>
+
+#### Closed-form confidence interval
+
+@Trinchera2018 proposed a closed-form confidence interval (CI) for
+the tau-equivalent reliability (Cronbach's alpha). To compute the CI, set
+`.closed_form_ci = TRUE` when calling `assess()` or invoke 
+`calculateRhoT(..., .closed_form_ci = TRUE)` directly. The level of the CI
+can be changed by supplying a single value or a vector of values to `.alpha`.
 
 ### Implementation
 The functions are implemented as: `calculateRhoC()` and `calculateRhoT()`. 
@@ -630,15 +760,14 @@ The heterotrait-monotrait ratio of correlations (HTMT) was first proposed by
 See: @Henseler2015 on page 121 (equation (6))
 
 ### Implementation
-The function is implemented as: `calculateHTMT()`. It may be called directly 
-using R's `:::` mechanism.
+The function is implemented as: `calculateHTMT()`.
 
 # Literature
 
 [^1]: There are some cutoffs such as e.g., the SRMR should be less than
       0.08 or 0.1, however, these values are essentially arbitrary as they have
       never been formally motivated. Reference is usually done to @Hu1999 which
-      based the cutoff on a simulation using factor-based SEM.
+      based the cut-off on a simulation using factor-based SEM.
       
 [Testing]: https://m-e-rademaker.github.io/cSEM/articles/Using-test.html
 [Notation]: https://m-e-rademaker.github.io/cSEM/articles/Notation.html

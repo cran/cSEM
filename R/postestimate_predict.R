@@ -6,7 +6,7 @@
 #' PLS (commonly called: "PLSPredict" \insertCite{Shmueli2019}{cSEM}). 
 #' Predict uses k-fold cross-validation to randomly 
 #' split the data into training and test data and subsequently predicts the 
-#' relevant values in the test data  based on the model parameter estimates obtained 
+#' relevant values in the test data based on the model parameter estimates obtained 
 #' using the training data. The number of cross-validation folds is 10 by default but
 #' may be changed using the `.cv_folds` argument.
 #' By default, the procedure is repeated `.r = 10` times to avoid irregularities
@@ -26,15 +26,8 @@
 #' `predict()` is more general in that is allows users to compare the predictions
 #' based on a so-called target model/specificiation to predictions based on an
 #' alternative benchmark. Available benchmarks include predictions
-#' based on a linear model, PLS-PM weights, unit weights (i.e. sum scores), GSCA weights, PCA weights, and 
-#' MAXVAR weights.
-#' 
-#' By default, only the indicator scores of 
-#' constructs modeled as common factors are predicted (`.only_common_factors  = TRUE`). 
-#' While technically possible, prediction for constructs modeled
-#' as composites is conceptually difficult since composites are by design build
-#' by their indicators, i.e., composites are not though of as being predictive of
-#' their indicators.
+#' based on a linear model, PLS-PM weights, unit weights (i.e. sum scores), 
+#' GSCA weights, PCA weights, and MAXVAR weights.
 #' 
 #' Each estimation run is checked for admissibility using [verify()]. If the 
 #' estimation yields inadmissible results, `predict()` stops with an error (`"stop"`).
@@ -48,13 +41,13 @@
 #' \describe{
 #'   \item{`$Actual`}{A matrix of the actual values/indicator scores of the endogenous constructs.}
 #'   \item{`$Prediction_target`}{A matrix of the predicted indicator scores of the endogenous constructs 
-#'     based on the target model. Target refers to }
-#'   \item{`$Residuals_target`}{A matrix of the residuals indicator scores of the endogenous constructs 
+#'     based on the target model. Target refers to procedure used to estimate 
+#'     the parameters in `.object`.}
+#'   \item{`$Residuals_target`}{A matrix of the residual indicator scores of the endogenous constructs 
 #'     based on the target model.}
-#'   \item{`$Residuals_lm`}{A matrix of the residuals indicator scores of the endogenous constructs 
-#'     based on a linear model in which the indicator scores of endogenous constructs
-#'     are predicted by exogenous indicator scores. This serves as a benchmark for
-#'     comparisons.}
+#'   \item{`$Residuals_benchmark`}{A matrix of the residual indicator scores 
+#'     of the endogenous constructs based on a model estimated by the procedure
+#'     given to `.benchmark`.}
 #'   \item{`$Prediction_metrics`}{A data frame containing the predictions metrics
 #'     MAE, RMSE, and Q2_predict.}
 #'   \item{`$Information`}{A list with elements
@@ -68,7 +61,6 @@
 #'  .benchmark            = c("lm", "unit", "PLS-PM", "GSCA", "PCA", "MAXVAR"),
 #'  .cv_folds             = 10,
 #'  .handle_inadmissibles = c("stop", "ignore", "set_NA"),
-#'  .only_common_factors  = TRUE,
 #'  .r                    = 10,
 #'  .test_data            = NULL
 #'  )
@@ -80,10 +72,7 @@
 #'   For "*ignore*" all results are returned even if all or some of the estimates
 #'   yielded inadmissible results. 
 #'   For "*set_NA*" predictions based on inadmissible parameter estimates are
-#'   set to `NA`.
-#' @param .only_common_factors Logical. Should only indicator scores for concepts 
-#'   modeled as common factors be predicted? 
-#'   Defaults to `TRUE`.
+#'   set to `NA`. Defaults to "*stop*"
 #'
 #' @seealso [csem], [cSEMResults]
 #' 
@@ -99,7 +88,6 @@ predict <- function(
   .benchmark            = c("lm", "unit", "PLS-PM", "GSCA", "PCA", "MAXVAR"),
   .cv_folds             = 10,
   .handle_inadmissibles = c("stop", "ignore", "set_NA"),
-  .only_common_factors  = TRUE,
   .r                    = 10,
   .test_data            = NULL
   ) {
@@ -112,7 +100,6 @@ predict <- function(
                   .benchmark = .benchmark, 
                   .cv_folds = .cv_folds,
                   .handle_inadmissibles = .handle_inadmissibles,
-                  .only_common_factors = .only_common_factors,
                   .r = .r,
                   .test_data = .test_data
                   )
@@ -125,6 +112,11 @@ predict <- function(
     # Stop if second order
     if(inherits(.object, "cSEMResults_2ndorder")) {
       stop2('Currently, `predict()` is not implemented for models containing higher-order constructs.')
+    }
+    
+    # Stop if second order
+    if(all(.object$Information$Model$structural == 0)) {
+      stop2("`predict()` requires a structural model.")
     }
     
     # Stop if nonlinear. See Danks et al. (?) for how this can be addressed.
@@ -172,10 +164,10 @@ predict <- function(
       
       dat_train <- args$.data[, indicators]
       
-      if(length(setdiff(colnames(.test_data), colnames(dat_train))) > 0) {
-        stop2("The following error occured in the `predict()` function:\n",
-              "Some variable names in the test data are not part of the training data.")
-      }
+      # if(length(setdiff(colnames(.test_data), colnames(dat_train))) > 0) {
+      #   stop2("The following error occured in the `predict()` function:\n",
+      #         "Some variable names in the test data are not part of the training data.")
+      # }
       # Warn if .test_data doesnt have row names
       if(is.null(rownames(.test_data))) {
         warning2(
@@ -200,6 +192,10 @@ predict <- function(
           .R               = 1,
           .seed            = NULL
         )[[1]]
+        
+        ## Clean data
+        dat <- lapply(dat, processData, .model = .object$Information$Model)
+        
         ii <- length(dat)
       } else {
         ii <- 1
@@ -249,11 +245,6 @@ predict <- function(
           # Identify exogenous construct in the structural model
           cons_exo  <- Est$Information$Model$cons_exo
           cons_endo <- Est$Information$Model$cons_endo
-          
-          ## Remove endogenous constructs that are modeled as composites
-          if(.only_common_factors) {
-            cons_endo <- setdiff(cons_endo, names(which(Est$Information$Model$construct_type == "Composite")))
-          }
           
           # Which indicators are connected to endogenous constructs?
           endo_indicators <- colnames(Est$Information$Model$measurement)[colSums(Est$Information$Model$measurement[cons_endo, , drop = FALSE]) != 0]
