@@ -4,7 +4,9 @@
 \name{Yooetal2000}
 \alias{Yooetal2000}
 \title{Data: Yooetal2000}
-\format{An object of class \code{data.frame} with 569 rows and 34 columns.}
+\format{
+An object of class \code{data.frame} with 569 rows and 34 columns.
+}
 \source{
 Simulated data with the same correlation matrix as the data studied
 by \insertCite{Yoo2000;textual}{cSEM}.
@@ -23,7 +25,7 @@ image, distribution intensity, advertising spending, and price deals, are
 related to the so-called dimensions of brand equity, i.e., perceived brand
 quality, brand loyalty, and brand awareness/associations. It is also used in
 \insertCite{Henseler2017;textual}{cSEM} and \insertCite{Henseler2020;textual}{cSEM}
-for demonstration purposes (Tutorial 10).
+for demonstration purposes, see the corresponding tutorial.
 }
 \examples{
 #============================================================================

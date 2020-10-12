@@ -1,4 +1,6 @@
 #' Tests for multi-group comparisons
+#' 
+#' \lifecycle{stable}
 #'
 #' This function performs various tests proposed in the context of multigroup analysis.
 #'  
@@ -65,6 +67,17 @@
 #'   no multiple testing correction is done, however, several common
 #'   adjustments are available via `.approach_p_adjust`. See 
 #'   \code{\link[stats:p.adjust]{stats::p.adjust()}} for details.}
+#' \item{`.approach_mgd = "Henseler"`: Approach suggested by \insertCite{Henseler2007a;textual}{cSEM}}{
+#'   Groups are compared in terms of parameter differences across groups.
+#'   In doing so, the bootstrap estimates of one parameter are compared across groups.
+#'   In the literature, this approach is also known as PLS-MGA.
+#'   Originally, this test was proposed as an one-sided test. 
+#'   In this function we perform a left-sided and a right-sided test 
+#'   to investigate whether a parameter differs across two groups. In doing so, the significance
+#'   level is divided by 2 and compared to p-value of the left and right-sided test. 
+#'   Moreover, `.approach_p_adjust` is ignored and no overall decision
+#'   is returned.
+#'   For a more detailed description, see also \insertCite{Henseler2009;textual}{cSEM}.}
 #' \item{`.approach_mgd = "CI_param"`: Approach mentioned in \insertCite{Sarstedt2011;textual}{cSEM}}{
 #'   This approach is based on the confidence intervals constructed around the 
 #'   parameter estimates of the two groups. If the parameter of one group falls within 
@@ -80,6 +93,8 @@
 #' 
 #' Use `.approach_mgd` to choose the approach. By default all approaches are computed
 #' (`.approach_mgd = "all"`).
+#' 
+#' For convenience, two types of output are available. See the "Value" section below.
 #' 
 #' By default, approaches based on parameter differences across groups compare
 #' all parameters (`.parameters_to_compare = NULL`). To compare only
@@ -132,7 +147,9 @@
 #'  .approach_p_adjust     = "none",
 #'  .approach_mgd          = c("all", "Klesel", "Chin", "Sarstedt", 
 #'                             "Keil", "Nitzl", "Henseler", "CI_para","CI_overlap"),
+#'  .output_type           = c("complete", "structured"),
 #'  .parameters_to_compare = NULL,
+#'  .eval_plan             = c("sequential", "multiprocess"),                           
 #'  .handle_inadmissibles  = c("replace", "drop", "ignore"),
 #'  .R_permutation         = 499,
 #'  .R_bootstrap           = 499,
@@ -153,7 +170,7 @@
 #'   For "*replace*" resampling continues until there are exactly `.R` admissible solutions. 
 #'   Defaults to "*replace*" to accommodate all approaches.
 #'   
-#' @return A list of class `cSEMTestMGD`. Technically, `cSEMTestMGD` is a 
+#' @return If `.output_type = "complete"` a list of class `cSEMTestMGD`. Technically, `cSEMTestMGD` is a 
 #'   named list containing the following list elements:
 #'
 #' \describe{
@@ -167,6 +184,21 @@
 #'   \item{`$CI_para`}{A list with elements,  `Decision`, and `Decision_overall`}
 #'   \item{`$CI_overlap`}{A list with elements,  `Decision`, and `Decision_overall`}
 #' }
+#' 
+#' If `.output_type = "structured"` a tibble (data frame) with the following columns 
+#' is returned.
+#' 
+#' \describe{
+#'   \item{`Test`}{The name of the test.}
+#'   \item{`Comparision`}{The parameter that was compared across groups. If "overall" 
+#'     the overall fit of the model was compared.}
+#'   \item{`alpha%`}{The test decision for a given "alpha" level. If `TRUE` the null 
+#'     hypotheses was rejected; if FALSE it was not rejected.}
+#'   \item{`p-value_correction`}{The p-value correction.}
+#'   \item{`CI_type`}{Only for the "CI_para" and the "CI_overlap" test. Which confidence interval was used.}
+#'   \item{`Distance_metric`}{Only for Test = "Klesel". Which distance metric was used.}
+#' }
+#' 
 #' @references
 #'   \insertAllCited{}
 #'   
@@ -182,7 +214,9 @@ testMGD <- function(
  .approach_p_adjust     = "none",
  .approach_mgd          = c("all", "Klesel", "Chin", "Sarstedt", 
                             "Keil", "Nitzl","Henseler", "CI_para","CI_overlap"),
+ .output_type           = c("complete", "structured"),
  .parameters_to_compare = NULL,
+ .eval_plan             = c("sequential", "multiprocess"),
  .handle_inadmissibles  = c("replace", "drop", "ignore"),
  .R_permutation         = 499,
  .R_bootstrap           = 499,
@@ -211,6 +245,7 @@ testMGD <- function(
                            # args_default, because args_default()$.handle_inadmissibles
                            # has "drop" as default, but testMGD hast "replace".
   .type_vcv             <- match.arg(.type_vcv)
+  .output_type          <- match.arg(.output_type)
   # if(!all(.type_ci %in%  c("CI_standard_z", "CI_standard_t", "CI_percentile",
   #                     "CI_basic", "CI_bc", "CI_bca") )){
   if(!all(.type_ci %in%  args_default(.choices = TRUE)$.type_ci )){
@@ -337,7 +372,7 @@ testMGD <- function(
     # Check if .object already contains resamples; if not, run bootstrap
     if(!inherits(.object, "cSEMResults_resampled")) {
       if(.verbose) {
-        cat("Bootstrap cSEMResults object ...\n\n")
+        cat("Bootstrap cSEMResults objects ...\n\n")
       }
       
       .object <- resamplecSEMResults(
@@ -345,7 +380,9 @@ testMGD <- function(
         .resample_method      = "bootstrap",
         .handle_inadmissibles = .handle_inadmissibles,
         .R                    = .R_bootstrap,
-        .seed                 = .seed) 
+        .seed                 = .seed,
+        .eval_plan            = .eval_plan
+        ) 
     }
     
     ## Combine bootstrap results in one matrix
@@ -389,7 +426,7 @@ testMGD <- function(
         "bias_all"          = c(path_bias, loading_bias, weight_bias, cor_exo_cons_bias)
         )
       
-      # If comparison should be done via CIs 
+      # Approaches based on CIs comparison ----
       if(any(.approach_mgd %in% c("all", "CI_para", "CI_overlap"))){
         
         diff <- setdiff(.type_ci, args_default(TRUE)$.type_ci)
@@ -548,8 +585,8 @@ testMGD <- function(
     
   # Start progress bar if required
   if(.verbose){
-    cat("Start permutation:\n\n")
-    pb <- txtProgressBar(min = 0, max = .R_permutation, style = 3)
+    cat("Permutation ...\n\n")
+    # pb <- txtProgressBar(min = 0, max = .R_permutation, style = 3)
   }
   
     # Save old seed and restore on exit! This is important since users may have
@@ -575,92 +612,97 @@ testMGD <- function(
   ref_dist        <- list()
   n_inadmissibles  <- 0
   counter <- 0
-  repeat{
-    # Counter
-    counter <- counter + 1
-    
-    # Permutate data
-    X_temp <- cbind(X_all, id = sample(id))
-    
-    # Replace the old dataset by the new permutated dataset
-    arguments[[".data"]] <- X_temp
-    
-    # Estimate model
-    Est_temp <- do.call(csem, arguments)   
-    
-    # Check status
-    status_code <- sum(unlist(verify(Est_temp)))
-    
-    # Distinguish depending on how inadmissibles should be handled
-    if(status_code == 0 | (status_code != 0 & .handle_inadmissibles == "ignore")) {
-      # Compute if status is ok or .handle inadmissibles = "ignore" AND the status is 
-      # not ok
+  progressr::with_progress({
+    progress_bar_csem <- progressr::progressor(along = 1:.R_permutation)
+    repeat{
+      # Counter
+      counter <- counter + 1
+      progress_bar_csem(message = sprintf("Permutation run = %g", counter))
       
-      ### Calculation of the test statistic for each resample ==================
-      teststat_permutation <- list()
+      # Permutate data
+      X_temp <- cbind(X_all, id = sample(id))
       
-      ## Klesel et al. (2019) --------------------------------------------------
-      if(any(.approach_mgd %in% c("all", "Klesel"))) {
-        ## Get the model-implied VCV
-        fit_temp <- fit(Est_temp, .saturated = .saturated, .type_vcv = .type_vcv)
+      # Replace the old dataset by the new permutated dataset
+      arguments[[".data"]] <- X_temp
+      
+      # Estimate model
+      Est_temp <- do.call(csem, arguments)   
+      
+      # Check status
+      status_code <- sum(unlist(verify(Est_temp)))
+      
+      # Distinguish depending on how inadmissibles should be handled
+      if(status_code == 0 | (status_code != 0 & .handle_inadmissibles == "ignore")) {
+        # Compute if status is ok or .handle inadmissibles = "ignore" AND the status is 
+        # not ok
         
-        ## Compute test statistic
-        temp <- c(
-          "dG" = calculateDistance(.matrices = fit_temp, .distance = "geodesic"),
-          "dL" = calculateDistance(.matrices = fit_temp, .distance = "squared_euclidian")
-        )
+        ### Calculation of the test statistic for each resample ==================
+        teststat_permutation <- list()
         
-        ## Save test statistic
-        teststat_permutation[["Klesel"]] <- temp
+        ## Klesel et al. (2019) --------------------------------------------------
+        if(any(.approach_mgd %in% c("all", "Klesel"))) {
+          ## Get the model-implied VCV
+          fit_temp <- fit(Est_temp, .saturated = .saturated, .type_vcv = .type_vcv)
+          
+          ## Compute test statistic
+          temp <- c(
+            "dG" = calculateDistance(.matrices = fit_temp, .distance = "geodesic"),
+            "dL" = calculateDistance(.matrices = fit_temp, .distance = "squared_euclidian")
+          )
+          
+          ## Save test statistic
+          teststat_permutation[["Klesel"]] <- temp
+        }
+        
+        ## Chin & Dibbern (2010) -------------------------------------------------
+        if(any(.approach_mgd %in% c("all", "Chin"))) {
+          ## Compute and save test statistic
+          teststat_permutation[["Chin"]] <- calculateParameterDifference(
+            .object = Est_temp, 
+            .model  = .parameters_to_compare)
+        }
+        ## Sarstedt et al. (2011) ------------------------------------------------
+        if(any(.approach_mgd %in% c("all", "Sarstedt"))) {
+          
+          # Permutation of the bootstrap parameter estimates
+          all_comb_permutation <- all_comb
+          all_comb_permutation[ , "group_id"] <- sample(group_id)
+          
+          teststat_permutation[["Sarstedt"]] <- calculateFR(all_comb_permutation)
+        }
+        
+        ref_dist[[counter]] <- teststat_permutation
+        
+      } else if(status_code != 0 & .handle_inadmissibles == "drop") {
+        # Set list element to zero if status is not okay and .handle_inadmissibles == "drop"
+        ref_dist[[counter]] <- NA
+        
+      } else {# status is not ok and .handle_inadmissibles == "replace"
+        # Reset counter and raise number of inadmissibles by 1
+        counter <- counter - 1
+        n_inadmissibles <- n_inadmissibles + 1
       }
       
-      ## Chin & Dibbern (2010) -------------------------------------------------
-      if(any(.approach_mgd %in% c("all", "Chin"))) {
-        ## Compute and save test statistic
-        teststat_permutation[["Chin"]] <- calculateParameterDifference(
-          .object = Est_temp, 
-          .model  = .parameters_to_compare)
+      # Update progres bar
+      # if(.verbose){
+      #   setTxtProgressBar(pb, counter)
+      # }
+      
+      # Break repeat loop if .R results have been created.
+      if(length(ref_dist) == .R_permutation) {
+        break
+      } else if(counter + n_inadmissibles == 10000) { 
+        # Stop if 10000 runs did not result in insufficient admissible results
+        stop("Not enough admissible result.", call. = FALSE)
       }
-      ## Sarstedt et al. (2011) ------------------------------------------------
-      if(any(.approach_mgd %in% c("all", "Sarstedt"))) {
-        
-        # Permutation of the bootstrap parameter estimates
-        all_comb_permutation <- all_comb
-        all_comb_permutation[ , "group_id"] <- sample(group_id)
+    } # END repeat 
+  }) # END with_progress
 
-        teststat_permutation[["Sarstedt"]] <- calculateFR(all_comb_permutation)
-      }
-      
-      ref_dist[[counter]] <- teststat_permutation
-      
-    } else if(status_code != 0 & .handle_inadmissibles == "drop") {
-      # Set list element to zero if status is not okay and .handle_inadmissibles == "drop"
-      ref_dist[[counter]] <- NA
-      
-    } else {# status is not ok and .handle_inadmissibles == "replace"
-      # Reset counter and raise number of inadmissibles by 1
-      counter <- counter - 1
-      n_inadmissibles <- n_inadmissibles + 1
-    }
-    
-    # Update progres bar
-    if(.verbose){
-      setTxtProgressBar(pb, counter)
-    }
-    
-    # Break repeat loop if .R results have been created.
-    if(length(ref_dist) == .R_permutation) {
-      break
-    } else if(counter + n_inadmissibles == 10000) { 
-      # Stop if 10000 runs did not result in insufficient admissible results
-      stop("Not enough admissible result.", call. = FALSE)
-    }
-  } # END repeat 
   
   # close progress bar
-  if(.verbose){
-    close(pb)
-  }
+  # if(.verbose){
+  #   close(pb)
+  # }
   
   ### Postprocessing ===========================================================
   # Delete potential NA's
@@ -702,9 +744,10 @@ testMGD <- function(
     # Create list with matrices containing the reference distribution 
     # of the parameter differences
     ref_dist_Chin <- lapply(ref_dist1, function(x) x$Chin)
-    
+
     # Transpose
     ref_dist_Chin_temp <- purrr::transpose(ref_dist_Chin)
+    names(ref_dist_Chin_temp) <- names(teststat_Chin)
     
     ref_dist_matrices_Chin <- lapply(ref_dist_Chin_temp, function(x) {
       temp <- do.call(cbind, x)
@@ -904,7 +947,7 @@ testMGD <- function(
     # Adjust p-value in case of multiple comparisons
     # Adjusting p-values is not straight forward. 
     # First it is a one-sided test, so we need to know the hypothesis
-    # Just flipping the p-value is not reaaly an option as it might causes problems 
+    # Just flipping the p-value is not really an option as it might cause problems 
     # in situation where the order of the p-values is required for the correction
     # Therefore only the "none"method is applied
     padjusted_Henseler<- lapply(as.list("none"), function(x){
@@ -924,23 +967,25 @@ testMGD <- function(
       temp <- lapply(.alpha, function(alpha){# over the different significance levels
         lapply(adjust_approach,function(group_comp){# over the different group comparisons
           # check whether the p values are larger than a certain alpha
-          group_comp > alpha & group_comp < 1- alpha
+          # The alpha is divided by two to mimic a two-sided test.
+          group_comp > alpha/2 & group_comp < 1- alpha/2
         })
       })
       names(temp) <- paste0(.alpha*100, "%")
       temp
     })
     
-    # It is not clear how an overall decision should be made  
+    # Overall decision; if one coefficient is significanty different across groups 
+    # it is rejected.
     decision_overall_Henseler <- lapply(decision_Henseler, function(decision_Henseler_list){
       lapply(decision_Henseler_list,function(x){
-        NA
+        all(unlist(x))
       })
     })
   }
     
   
-  # Comparison via confidence intervals
+  # Comparison via confidence intervals ------------------
   if(any(.approach_mgd %in% c("all", "CI_para", "CI_overlap"))) {
     # Select CIs from the bootstrap_results
     cis <- lapply(bootstrap_results,function(x){
@@ -960,7 +1005,7 @@ testMGD <- function(
     names(param_comp) <- sapply(param_comp,
                                 function(x)
                                   paste0(names(x)[1], '_', names(x)[2]))
-
+    # CI_para -------------------------------------------
     if(any(.approach_mgd %in% c("all", "CI_para"))) {
       
       # Investigate whether the estimate of one group is part of the CI of another group
@@ -1069,6 +1114,8 @@ testMGD <- function(
       
     }#end if .approach_mgd == CI_para
     
+    # CI_overlap ---------------------------------------------
+    
     if(any(.approach_mgd %in% c("all", "CI_overlap"))) {
       
       decision_ci_overlap <- lapply(.alpha, function(alpha) {
@@ -1161,8 +1208,8 @@ testMGD <- function(
     "Number_of_observations"= sapply(X_all_list, nrow),
     "Approach"              = .approach_mgd,
     "Approach_p_adjust"     = .approach_p_adjust,
-    "Alpha"                 = .alpha
-  )
+    "Alpha"                 = .alpha,
+    "Parameters_to_compare" = .parameters_to_compare)
 
   ## Permutation-specific information
   if(any(.approach_mgd %in% c("all", "Klesel", "Chin", "Sarstedt"))) {
@@ -1306,5 +1353,17 @@ testMGD <- function(
   }
    
   class(out) <- "cSEMTestMGD"
-  return(out)
+  
+  if(.output_type == "complete") {
+    return(out)
+  } else {
+    structureTestMGDDecisions(out)
+  }
 }
+
+
+
+
+
+
+

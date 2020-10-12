@@ -16,9 +16,13 @@ getConstructScores(
 to \code{TRUE}.}
 }
 \value{
-A matrix of construct scores.
+A list of three with elements \code{Construct_scores}, \code{W_used},
+\code{Indicators_used}.
 }
 \description{
+\lifecycle{stable}
+}
+\details{
 Get the standardized or unstandardized construct scores.
 }
 \seealso{

@@ -6,6 +6,7 @@
 \alias{calculateChiSquareDf}
 \alias{calculateCFI}
 \alias{calculateGFI}
+\alias{calculateCN}
 \alias{calculateIFI}
 \alias{calculateNFI}
 \alias{calculateNNFI}
@@ -20,7 +21,9 @@ calculateChiSquareDf(.object)
 
 calculateCFI(.object)
 
-calculateGFI(.object, .type = c("ML", "ULS"))
+calculateGFI(.object, .type_gfi = c("ML", "GLS", "ULS"), ...)
+
+calculateCN(.object, .alpha = 0.05, ...)
 
 calculateIFI(.object)
 
@@ -43,10 +46,16 @@ calculateSRMR(
 \arguments{
 \item{.object}{An R object of class \link{cSEMResults} resulting from a call to \code{\link[=csem]{csem()}}.}
 
-\item{.type}{Character string. Which fitting function should the GFI be based
-on? One of \emph{"ML"} for the maximum likelihood fitting function or \emph{"ULS"} for the
+\item{.type_gfi}{Character string. Which fitting function should the GFI be based
+on? One of \emph{"ML"} for the maximum likelihood fitting function, \emph{"GLS"} for
+the generalized least squares fitting function or \emph{"ULS"} for the
 unweighted least squares fitting function (same as the squared Euclidian distance).
 Defaults to \emph{"ML"}.}
+
+\item{...}{Ignored.}
+
+\item{.alpha}{An integer or a numeric vector of significance levels.
+Defaults to \code{0.05}.}
 
 \item{.matrix1}{A \code{matrix} to compare.}
 
@@ -54,8 +63,6 @@ Defaults to \emph{"ML"}.}
 
 \item{.saturated}{Logical. Should a saturated structural model be used?
 Defaults to \code{FALSE}.}
-
-\item{...}{Ignored.}
 }
 \value{
 A single numeric value.
@@ -77,6 +84,8 @@ for details on the implementation.
 \item \code{calculateCFI}: The comparative fit index (CFI).
 
 \item \code{calculateGFI}: The goodness of fit index (GFI).
+
+\item \code{calculateCN}: The Hoelter index alias Hoelter's (critical) N (CN).
 
 \item \code{calculateIFI}: The incremental fit index (IFI).
 

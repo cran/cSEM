@@ -26,9 +26,11 @@ second-order constructs).
 }
 }
 \description{
-Verify admissibility of the results obtained using \code{\link[=csem]{csem()}}.
+\lifecycle{stable}
 }
 \details{
+Verify admissibility of the results obtained using \code{\link[=csem]{csem()}}.
+
 Results exhibiting one of the following defects are deemed inadmissible:
 non-convergence of the algorithm used to obtain weights, loadings and/or
 (congeneric) reliabilities larger than 1, a construct variance-covariance (VCV) and/or
@@ -38,7 +40,7 @@ If \code{.object} is of class \code{cSEMResults_2ndorder} (i.e., estimates are
 based on a model containing second-order constructs) both the first and the second stage are checked separately.
 
 Currently, a model-implied indicator VCV matrix for nonlinear model is not
-available. \code{verify()} therefore skips the check for positive definitness of the
+available. \code{verify()} therefore skips the check for positive definiteness of the
 model-implied indicator VCV matrix for nonlinear models and returns "ok".
 }
 \examples{

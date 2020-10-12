@@ -1,3 +1,211 @@
+#' Model selection criteria
+#' 
+#' Calculate several information or model selection criteria (MSC) such as the
+#' Akaike information criterion (AIC), the Bayesian information criterion (BIC) or
+#' the Hannan-Quinn criterion (HQ).
+#'
+#' By default, all criteria are calculated (`.ms_criterion == "all"`). To compute only
+#' a subset of the criteria a vector of criteria may be given.
+#' 
+#' If `.by_equation == TRUE` (the default), the criteria are computed for each 
+#' structural equation of the model separately, as suggested by 
+#' \insertCite{Sharma2019;textual}{cSEM} in the context of PLS. The relevant formula can be found in
+#'  Table B1 of the appendix of \insertCite{Sharma2019;textual}{cSEM}. 
+#'  
+#' If `.by_equation == FALSE` the AIC, the BIC and the HQ for whole model 
+#' are calculated. All other criteria are currently ignored in this case! 
+#' The relevant formulae are (see, e.g., \insertCite{Akaike1974}{cSEM},
+#' \insertCite{Schwarz1978;textual}{cSEM}, 
+#' \insertCite{Hannan1979;textual}{cSEM}): 
+#' 
+#' \deqn{AIC = - 2*log(L) + 2*k}
+#' \deqn{BIC = - 2*log(L) + k*ln(n)}
+#' \deqn{HQ  = - 2*log(L) + 2*k*ln(ln(n))}
+#' 
+#' where log(L) is the log likelihood function of the multivariate normal
+#' distribution of the observable variables, k the (total) number of estimated parameters,
+#' and n the sample size.
+#' 
+#' If `.only_structural == TRUE`, log(L) is based on the structural model only.
+#' The argument is ignored if `.by_equation == TRUE`.
+#' 
+#' @usage calculateModelSelectionCriteria(
+#'   .object          = NULL,
+#'   .ms_criterion    = c("all", "aic", "aicc", "aicu", "bic", "fpe", "gm", "hq",
+#'                        "hqc", "mallows_cp"),
+#'   .by_equation     = TRUE, 
+#'   .only_structural = TRUE 
+#'   )
+#'
+#' @return If `.by_equation == TRUE` a named list of model selection criteria.
+#'   
+#' @inheritParams csem_arguments
+#'
+#' @seealso [assess()], [cSEMResults]
+#'
+#' @references 
+#' \insertAllCited{}
+#' @export
+
+calculateModelSelectionCriteria <- function(
+  .object          = NULL, 
+  .ms_criterion    = c("all", "aic", "aicc", "aicu", "bic", "fpe", "gm", "hq",
+                       "hqc", "mallows_cp"),
+  .by_equation     = TRUE,
+  .only_structural = TRUE
+  ){
+  
+  if(inherits(.object, "cSEMResults_multi")) {
+    
+    out <- lapply(.object, calculateModelSelectionCriteria,
+                  .ms_criterion    = .ms_criterion,
+                  .by_equation     = .by_equation,
+                  .only_structural = .only_structural)
+    return(out)
+    
+  } else if(inherits(.object, "cSEMResults_default")) {
+    
+    x1 <- .object$Estimates
+    x2 <- .object$Information$Model
+    S  <- x1$Indicator_VCV
+    n <- nrow(.object$Information$Data)
+    
+    ## Mean square of the saturated model
+    args <- .object$Information$Arguments
+    args$.model$structural[lower.tri(args$.model$structural)] <- 1
+    
+    out_saturated <- do.call(csem, args)
+    
+    MSE <- (1 - out_saturated$Estimates$R2)
+    
+  } else if(inherits(.object, "cSEMResults_2ndorder")) {
+    
+    x1 <- summarize(.object)$Second_stage$Estimates
+    x2 <- summarize(.object)$Second_stage$Information$Model
+    S  <- .object$First_stage$Estimates$Indicator_VCV
+    # Sample size
+    n <- nrow(.object$First_stage$Information$Data)
+    
+    ## Mean square of the saturated model
+    args <- .object$Second_stage$Information$Arguments
+    args$.model$structural[lower.tri(args$.model$structural)] <- 1
+    
+    out_saturated <- do.call(csem, args)
+    
+    MSE <- (1 - out_saturated$Estimates$R2)
+    # remove _temp suffix in second stage
+    names(MSE) <- gsub("_temp","", names(MSE))
+    
+  } else {
+    stop2(
+      "The following error occured in the calculateModelSelectionCriteria() function:\n",
+      "`.object` must be of class `cSEMResults`."
+    )
+  }
+  
+  ## Model-implied indicator covariance matrix
+  Sigma_hat <- fit(.object = .object, 
+                   .saturated  = FALSE, 
+                   .type_vcv = "indicator"
+                   )
+  ## Number of estimated parameters
+  # Note: # estimated parameters = total number of elements of S - df
+  k <- sum(lower.tri(S)) - calculateDf(.object)
+  ## Number of indicators
+  p <- nrow(S)
+  
+  ## Set up empty list
+  out <- list()
+  
+  if(!.by_equation) {
+    if(.only_structural) {
+      # Reassign S, Sigma_hat, k and p. Now:
+      # S         := construct correlation matrix
+      # Sigma_hat := model-implied construct correlation matrix
+      # k         := # of estimated parameters of the structural model (either 
+      #              correlations or structural model parameters)
+      # p         := # of constructs in the structural model
+      S <- x1$Construct_VCV
+      Sigma_hat <- fit(.object, 
+                       .saturated = FALSE, 
+                       .type_vcv = 'construct')
+      
+      # Count construct correlations and/or structural model parameters
+        if(!all(x2$structural == 0)) {
+          # Free correlations between exogenous constructs
+          n_cor_exo <- length(x2$cons_exo) * (length(x2$cons_exo) - 1) / 2 
+          
+          # Number of structural parameters
+          n_structural <- sum(x2$structural)
+        } else {
+          n_cor_exo    <- nrow(x2$structural) * (nrow(x2$structural) - 1) / 2
+          n_structural <- 0
+        }
+      k <- n_cor_exo + n_structural
+      p <- nrow(S)
+    }
+
+    ## Log Likelihood
+    logL <- - n*p/2*log(2*pi) -n/2*sum(diag(S %*% solve(Sigma_hat))) - n/2*log(det(Sigma_hat))
+    
+    if(any(.ms_criterion %in% c("all", "aic"))) {
+      ## Compute AIC
+      out[["AIC"]] <- -2*logL + 2*k 
+    }
+    if(any(.ms_criterion %in% c("all", "bic"))) {
+      ## Compute BIC
+      out[["BIC"]] <- -2*logL + k*log(n) 
+    }
+    if(any(.ms_criterion %in% c("all", "hq"))) {
+      ## Compute HQ
+      out[["HQ"]] <- -2*logL + 2*k*log(log(n)) 
+    }
+  } else {
+    ### Implementation based on Sharma et al. (2019), p.391, Table B1
+    ## 
+    SSE <- (1 - x1$R2)*(n - 1)
+    
+    ## Update k to contain the number of parameters for each equation instead of
+    ## all model parameters.
+    ## Note: in line with Sharma et. al (2019) the number of paramters per equation
+    ##       is computed as number of regressors + 1 (for the constant).
+    ##       Its unclear if the constant is really necessary since constructs are
+    ##       standardized. Hence, the constant will always be zero.
+    ## 
+    k <- rowSums(x2$structural)[names(x1$R2)] + 1
+   
+    if(any(.ms_criterion %in% c("all", "aic"))) {
+      out[["AIC"]] <- n*(log(SSE / n) + 2*k/n)
+    }
+    if(any(.ms_criterion %in% c("all", "aicc"))) {
+      out[["AICc"]] <- n*(log(SSE / n) + (n + k)/(n - k -2))
+    }
+    if(any(.ms_criterion %in% c("all", "aicu"))) {
+      out[["AICu"]] <- n*(log(SSE / (n - k)) + 2*k/n)
+    }
+    if(any(.ms_criterion %in% c("all", "bic"))) {
+      out[["BIC"]] <- n*(log(SSE / n) + k*log(n)/n)
+    }
+    if(any(.ms_criterion %in% c("all", "fpe"))) {
+      out[["FPE"]] <- (SSE / (n-k)) * (1 + k/n)
+    }
+    if(any(.ms_criterion %in% c("all", "gm"))) {
+      out[["GM"]] <- (SSE / MSE) + k*log(n)
+    }
+    if(any(.ms_criterion %in% c("all", "hq"))) {
+      out[["HQ"]] <- n*(log(SSE / n) + (2*k*log(log(n)))/n)
+    }
+    if(any(.ms_criterion %in% c("all", "hqc"))) {
+      out[["HQc"]] <- n*(log(SSE / n) + (2*k*log(log(n)))/(n - k - 2))
+    }
+    if(any(.ms_criterion %in% c("all", "mallows_cp"))) {
+      out[["Mallows_Cp"]] <- (SSE / MSE) - (n - 2*k)
+    }
+  }
+  
+  return(out)
+}
+
 #' Average variance extracted (AVE)
 #'
 #' Calculate the average variance extracted (AVE) as proposed by 
@@ -327,6 +535,73 @@ calculateDf <- function(
   
   ## Return degrees of freedom
   df_total
+}
+
+
+
+#' Fornell-Larcker criterion
+#' 
+#' Computes the Fornell-Larcker matrix.
+#' 
+#' The Fornell-Larcker criterion (FL criterion) is a rule suggested by \insertCite{Fornell1981;textual}{cSEM}
+#' to assess discriminant validity. The Fornell-Larcker
+#' criterion is a decision rule based on a comparison between the squared
+#' construct correlations and the average variance extracted (AVE).
+#' 
+#' The FL criterion is inherently tied to the common factor model. It is therefore 
+#' unclear how to meaningfully interpret the FL criterion in the context of a 
+#' model that contains constructs modeled as composites.
+#' 
+#' @usage calculateFLCriterion(
+#'   .object              = NULL,
+#'   .only_common_factors = TRUE,
+#'   ...
+#'   )
+#'
+#' @return A matrix with the squared construct correlations on the off-diagonal and 
+#' the AVE's on the main diagonal.
+#'   
+#' @inheritParams csem_arguments
+#' @param ... Ignored.
+#'
+#' @seealso [assess()], [cSEMResults]
+#'
+#' @references 
+#' \insertAllCited{}
+#' @export
+
+calculateFLCriterion <- function(
+  .object              = NULL,
+  .only_common_factors = TRUE,
+  ...
+  ) {
+  if(inherits(.object, "cSEMResults_multi")) {
+    out <- lapply(.object, calculateFLCriterion,
+                  .only_common_factors = .only_common_factors)
+    return(out)
+  } else if(inherits(.object, "cSEMResults_default")) {
+    # Fornell-Larcker
+    ## Get relevant objects
+    con_types <-.object$Information$Model$construct_type
+    names_cf  <- names(con_types[con_types == "Common factor"])
+    P         <- .object$Estimates$Construct_VCV
+    
+    if(.only_common_factors) {
+      P <- P[names_cf, names_cf]
+    }
+    
+    if(sum(dim(P)) > 0) {
+      FL_matrix <- cov2cor(P)^2
+      diag(FL_matrix) <- calculateAVE(.object, 
+                                      .only_common_factors = .only_common_factors)
+      FL_matrix
+    } 
+    
+  } else { # 2nd order
+    stop2(
+      "Computation of the Fornell-Larcker criterion",
+      " not supported for models containing second-order constructs:\n")
+  }
 }
 
 
@@ -742,7 +1017,7 @@ calculateRhoT <- function(
 #'
 #' Compute the heterotrait-monotrait ratio of correlations (HTMT) based on 
 #' \insertCite{Henseler2015;textual}{cSEM}. The HTMT is a consistent estimator for the
-#' construct correlations of tau-equivalent measurement model. It is used to
+#' construct correlations of a tau-equivalent measurement model. It is used to
 #' assess discriminant validity.
 #' 
 #' Computation of the HTMT assumes that all intra-block and inter-block 
@@ -750,8 +1025,10 @@ calculateRhoT <- function(
 #' A warning is given if this is not the case. If all intra-block or inter-block
 #' correlations are negative the absolute HTMT values are returned (`.absolute = TRUE`).
 #' 
-#' To obtain the alpha%-quantile of the bootstrap distribution for each HTMT 
-#' value set `.inference = TRUE`.
+#' To obtain the 1-alpha%-quantile of the bootstrap distribution for each HTMT 
+#' value set `.inference = TRUE`. To choose the type of confidence interval to use
+#' to compute the 1-alpha%-quantile, use `.ci`. To control the bootstrap process,
+#' arguments `.handle_inadmissibles`, `.R` and `.seed` are available. 
 #' 
 #' Since the HTMT is defined with respect to a classical true score measurement
 #' model only concepts modeled as common factors are considered by default.
@@ -763,33 +1040,52 @@ calculateRhoT <- function(
 #'  .object               = NULL,
 #'  .absolute             = TRUE,
 #'  .alpha                = 0.05,
+#'  .ci                   = c("CI_percentile", "CI_standard_z", "CI_standard_t", 
+#'                            "CI_basic", "CI_bc", "CI_bca", "CI_t_interval"),
 #'  .handle_inadmissibles = c("drop", "ignore", "replace"),
 #'  .inference            = FALSE,
 #'  .only_common_factors  = TRUE,
 #'  .R                    = 499,
-#'  .seed                 = NULL
+#'  .seed                 = NULL,
+#'  ...
 #' )
 #'
 #' @inheritParams csem_arguments
+#' @param .alpha A numeric value giving the significance level. 
+#'   Defaults to `0.05`.
+#' @param .ci A character strings naming the type of confidence interval to use 
+#'   to compute the 1-alpha% quantile of the bootstrap HTMT values. For possible 
+#'   choices see [infer()]. Ignored
+#'   if `.inference = FALSE`. Defaults to "*CI_percentile*".
+#' @param ... Ignored.
 #'
 #' @return A lower tringular matrix of HTMT values. If `.inference = TRUE`
-#'   the upper tringular part is the .alpha%-quantile of the HTMT's bootstrap
+#'   the upper tringular part is the 1-.alpha%-quantile of the HTMT's bootstrap
 #'   distribution.
 #' 
 #' @seealso [assess()], [csem], [cSEMResults]
+#' 
+#' @references 
+#' 
+#' \insertAllCited{}
+#' 
 #' @export
 
 calculateHTMT <- function(
   .object               = NULL,
   .absolute             = TRUE,
   .alpha                = 0.05,
+  .ci                   = c("CI_percentile", "CI_standard_z", "CI_standard_t", 
+                            "CI_basic", "CI_bc", "CI_bca", "CI_t_interval"),
   .handle_inadmissibles = c("drop", "ignore", "replace"),
   .inference            = FALSE,
   .only_common_factors  = TRUE,
   .R                    = 499,
-  .seed                 = NULL
+  .seed                 = NULL,
+  ...
 ){
   .handle_inadmissibles <- match.arg(.handle_inadmissibles)
+  .ci                   <- match.arg(.ci) # allow only one CI
 
   if(inherits(.object, "cSEMResults_multi")) {
     out <- lapply(.object, calculateHTMT,
@@ -903,8 +1199,8 @@ calculateHTMT <- function(
     
     # Compute quantile
     if(length(.alpha) == 1) {
-      out_htmt <- out_resample$Estimates$Estimates_resample$Estimates1$HTMT 
-      quants <- matrixStats::colQuantiles(out_htmt$Resampled, probs = 1 - .alpha) 
+      out_infer <- infer(out_resample, .alpha = .alpha*2, .quantity = .ci)
+      quants <- out_infer$HTMT[[1]][2, ] 
     } else {
       stop2(
         "The following error occured in the calculateHTMT() function:\n",
@@ -1164,11 +1460,11 @@ calculateCFI <- function(.object) {
 #' @describeIn fit_measures The goodness of fit index (GFI).
 #' @export
 
-calculateGFI <- function(.object, .type = c("ML", "ULS")) {
-  .type <- match.arg(.type)
+calculateGFI <- function(.object, .type_gfi = c("ML", "GLS", "ULS"), ...) {
+  .type_gfi <- match.arg(.type_gfi)
 
-    if(inherits(.object, "cSEMResults_multi")) {
-    out <- lapply(.object, calculateGFI)
+  if(inherits(.object, "cSEMResults_multi")) {
+    out <- lapply(.object, calculateGFI, .type_gfi = .type_gfi)
     return(out)
   }
   if(inherits(.object, "cSEMResults_default")) {
@@ -1184,18 +1480,54 @@ calculateGFI <- function(.object, .type = c("ML", "ULS")) {
   
   Sigma_hat <- fit(.object)
   
-  # See Mulaik (1989, p. 345)
-  if(.type == "ULS") {
-    # If ULS
-    1 - matrixcalc::matrix.trace(t(S - Sigma_hat) %*% (S - Sigma_hat)) / 
-      matrixcalc::matrix.trace(t(S) %*% S)
-    
-  } else if(.type == "ML") {
-    # If ML
+  if(.type_gfi == "ML") {
+    # If ML; See Mulaik (1989, p. 345)
     1 - matrixcalc::matrix.trace(t(solve(Sigma_hat) %*% S - diag(nrow(S))) %*% 
                                    (solve(Sigma_hat) %*% S - diag(nrow(S)))) / 
       matrixcalc::matrix.trace(t(solve(Sigma_hat) %*% S) %*% (solve(Sigma_hat) %*% S))
+  } else if(.type_gfi == "GLS") {
+    # If GLS; See Tanaka & Huba (1985, p. 199; Eq. 16)
+    1 - matrixcalc::matrix.trace(t(diag(nrow(S)) - Sigma_hat %*% solve(S)) %*% 
+                                   (diag(nrow(S)) - Sigma_hat %*% solve(S))) / nrow(S)
+  } else if(.type_gfi == "ULS") {
+    # If ULS; See Mulaik (1989, p. 345)
+    1 - matrixcalc::matrix.trace(t(S - Sigma_hat) %*% (S - Sigma_hat)) / 
+      matrixcalc::matrix.trace(t(S) %*% S)
   }
+}
+
+#' @describeIn fit_measures The Hoelter index alias Hoelter's (critical) N (CN).
+#' @export
+
+calculateCN <- function(.object, .alpha = 0.05, ...) {
+  
+  if(inherits(.object, "cSEMResults_multi")) {
+    out <- lapply(.object, calculateCN)
+    return(out)
+  }
+  if(inherits(.object, "cSEMResults_default")) {
+    N    <- nrow(.object$Information$Data)
+  } else if(inherits(.object, "cSEMResults_2ndorder")) {
+    N    <- nrow(.object$First_stage$Information$Data)
+  } else {
+    stop2(
+      "The following error occured in the calculateHoeltersN() function:\n",
+      "`.object` must be of class `cSEMResults`."
+    )
+  }
+  
+  chi_square      <- calculateChiSquare(.object)
+  df              <- calculateDf(.object)
+  chi_square_crit <- qchisq(1 - .alpha, df)
+  # z <- qnorm(1 - .alpha/2ap)                              
+  
+  # (z + sqrt(2*df - 1))^2 / (2*chi_square/(N-1)) + 1 
+  # Formula given in Hoelters (1983), p.331 and Hu & Bentler (1998), p.428; the
+  # formula is less exact than the one below. See Bollen & Liang (1988) - Some properties
+  # of Hoelter's CN; especially footnote 2
+
+  chi_square_crit / (chi_square/(N-1)) + 1 # formula given on David Kennys website and Bollen & Liang (1988)
+  # Motivation: chi_crit = (CN - 1)*F = (CN -1)*Chi_square/(N-1)
 }
 
 #' @describeIn fit_measures The incremental fit index (IFI).
@@ -1424,6 +1756,8 @@ calculateSRMR <- function(
 #'   number of columns is equal to the total number of right-hand side variables
 #'   of these equations.
 #' 
+#' @references 
+#' \insertAllCited{}
 #' @seealso [assess()], [csem], [cSEMResults]
 #' @export
 
@@ -1572,7 +1906,7 @@ calculateVIFModeB <- function(.object = NULL) {
     return(out)
   } else {
     stop2(
-      "The following error occured in the calculateVIF() function:\n",
+      "The following error occured in the calculateVIFModeB() function:\n",
       "`.object` must be of class `cSEMResults`."
     )
   }
@@ -1616,6 +1950,25 @@ calculateVIFModeB <- function(.object = NULL) {
     names(VIF) <- names(modesB)
   } else {
     VIF <- NA
+  }
+  
+  ## Make output a matrix
+  # Note: this is necessary for calculateVIFModeB() to work
+  #       when supplied to the .user_funs argument of resamplecSEMResults(). 
+  #       Currently, the .user_funs functions 
+  #       need to return a vector or a matrix.
+  
+  if(!anyNA(VIF)) {
+    mm <- m[names(modesB), colSums(m[names(modesB), , drop = FALSE]) != 0 , drop = FALSE]
+    tm <- t(mm)
+    tm[which(tm == 1)] <- unlist(VIF)
+    
+    # Remove "_temp" suffix if it appears
+    rownames(tm) <- gsub("_temp", "", rownames(tm))
+    colnames(tm) <- gsub("_temp", "", colnames(tm))
+    
+    # Return
+    VIF <- t(tm)
   }
   
   return(VIF)

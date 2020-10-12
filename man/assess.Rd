@@ -6,16 +6,17 @@
 \usage{
 assess(
   .object              = NULL, 
-  .quality_criterion   = c("all", "ave", "rho_C", "rho_C_mm", "rho_C_weighted", 
-                           "rho_C_weighted_mm", "cronbachs_alpha", 
-                          "cronbachs_alpha_weighted", "dg", "dl", "dml", "df",
-                          "effects", "f2", "chi_square", "chi_square_df",
-                          "cfi", "gfi", "ifi", "nfi", "nnfi", 
-                          "reliability", 
-                          "rmsea", "rms_theta", "srmr",
-                          "gof", "htmt", "r2", "r2_adj",
-                          "rho_T", "rho_T_weighted", "vif", 
-                          "vifmodeB",  "fl_criterion"),
+  .quality_criterion   = c("all", "aic", "aicc", "aicu", "bic", "fpe", "gm", "hq",
+                           "hqc", "mallows_cp", "ave",
+                           "rho_C", "rho_C_mm", "rho_C_weighted", 
+                           "rho_C_weighted_mm", "dg", "dl", "dml", "df",
+                           "effects", "f2", "fl_criterion", "chi_square", "chi_square_df",
+                           "cfi", "cn", "gfi", "ifi", "nfi", "nnfi", 
+                           "reliability",
+                           "rmsea", "rms_theta", "srmr",
+                           "gof", "htmt", "r2", "r2_adj",
+                           "rho_T", "rho_T_weighted", "vif", 
+                           "vifmodeB"),
   .only_common_factors = TRUE, 
   ...
 )
@@ -41,12 +42,14 @@ A named list of quality criteria. Note that if only a single quality
 criteria is computed the return value is still a list!
 }
 \description{
+\lifecycle{maturing}
+}
+\details{
 Assess a model using common quality criteria.
 See the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model}
 article on the
 \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website} for details.
-}
-\details{
+
 The function is essentially a wrapper around a number of internal functions
 that perform an "assessment task" (called a \strong{quality criterion} in \pkg{cSEM}
 parlance) like computing reliability estimates,
@@ -70,7 +73,7 @@ It is possible to report the AVE for constructs modeled as composites by setting
 \code{.only_common_factors = FALSE}, however, result should be interpreted with caution
 as they may not have a conceptual meaning. Calculation is done
 by \code{\link[=calculateAVE]{calculateAVE()}}.}
-\item{Congeneric reliability; "rho_C", "rho_C_mm,", "rho_C_weighted", "rho_C_weighted_mm"}{
+\item{Congeneric reliability; "rho_C", "rho_C_mm", "rho_C_weighted", "rho_C_weighted_mm"}{
 An estimate of the reliability assuming a congeneric measurement model (i.e., loadings are
 allowed to differ) and a test score (proxy) based on unit weights.
 There are four different versions implemented. See the
@@ -92,27 +95,6 @@ It is possible to report the congeneric reliability for constructs modeled as
 composites by setting \code{.only_common_factors = FALSE}, however, result should be
 interpreted with caution as they may not have a conceptual meaning.
 Calculation is done by \code{\link[=calculateRhoC]{calculateRhoC()}}.}
-\item{Cronbach's alpha; "cronbachs_alpha"}{An estimate of the
-reliability assuming a tau-equivalent measurement model (i.e., a measurement
-model with equal loadings) and a test score (proxy) based on unit weights.
-To compute Cronbach's alpha based on a score that uses the weights of the
-weight approach used to obtain \code{.object}, use \code{"cronbachs_alpha_weighted"} instead.
-Cronbach's alpha is an alias for \code{"rho_T"} the tau-equivalent
-reliability which is
-the prefered name for this kind of reliability in \pkg{cSEM}, as it clearly states what
-it actually estimates (the tau-equivalent reliability as opposed to
-the congeneric reliability). "rho_T" and "cronbachs_alpha" are therefore
-always identical.
-The tau-equivalent
-reliability (Cronbach's alpha) is inherently
-tied to the common factor model. It is therefore unclear how to meaningfully
-interpret tau-equivalent
-reliability estimates for constructs modeled as composites.
-It is possible to report tau-equivalent
-reliability estimates for constructs modeled as
-composites by setting \code{.only_common_factors = FALSE}, however, result should be
-interpreted with caution as they may not have a conceptual meaning.
-Calculation is done by \code{\link[=calculateRhoT]{calculateRhoT()}}}
 \item{Distance measures; "dg", "dl", "dml"}{Measures of the distance
 between the model-implied and the empirical indicator correlation matrix.
 Currently, the geodesic distance (\code{"dg"}), the squared Euclidian distance
@@ -135,7 +117,7 @@ R2_included and R2_excluded are the R squares of the
 original structural model regression equation (R2_included) and the
 alternative specification with the k'th variable dropped (R2_excluded).
 Calculation is done by \code{\link[=calculatef2]{calculatef2()}}.}
-\item{Fit indices; "chi_square", "chi_square_df", "cfi", "gfi", "ifi", "nfi",
+\item{Fit indices; "chi_square", "chi_square_df", "cfi", "cn", "gfi", "ifi", "nfi",
 "nnfi",  "rmsea", "rms_theta", "srmr"}{
 Several absolute and incremental fit indices. Note that their suitability
 for models containing constructs modeled as composites is still an
@@ -151,7 +133,7 @@ to assess discriminant validity. The Fornell-Larcker
 criterion is a decision rule based on a comparison between the squared
 construct correlations and the average variance extracted. FL returns
 a matrix with the squared construct correlations on the off-diagonal and
-the AVE's on the main diagonal. Calculation is done by \code{assess()}.}
+the AVE's on the main diagonal. Calculation is done by \code{calculateFLCriterion()}.}
 \item{Goodness of Fit (GoF); "gof"}{The GoF is defined as the square root
 of the mean of the R squares of the structural model times the mean
 of the variances in the indicators that are explained by their
@@ -172,6 +154,10 @@ It is possible to report the HTMT for constructs modeled as
 composites by setting \code{.only_common_factors = FALSE}, however, result should be
 interpreted with caution as they may not have a conceptual meaning.
 Calculation is done by \code{\link[=calculateHTMT]{calculateHTMT()}}.}
+\item{Model selection criteria: "aic", "aicc", "aicu", "bic", "fpe", "gm",
+"hq", "hqc", "mallows_cp"}{
+Several model selection criteria as suggested by \insertCite{Sharma2019;textual}{cSEM}
+in the context of PLS. See: \code{\link[=calculateModelSelectionCriteria]{calculateModelSelectionCriteria()}} for details.}
 \item{Reliability: "reliability"}{
 As described in the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#methods}{Methods and Formulae}
 section of the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model}
@@ -194,7 +180,7 @@ Calculated when running \code{\link[=csem]{csem()}}.}
 reliability assuming a tau-equivalent measurement model (i.e. a measurement
 model with equal loadings) and a test score (proxy) based on unit weights.
 Tau-equivalent reliability is the preferred name for reliability estimates
-that assume a tau-equivalent measurment model such as Cronbach's alpha.
+that assume a tau-equivalent measurement model such as Cronbach's alpha.
 The tau-equivalent
 reliability (Cronbach's alpha) is inherently
 tied to the common factor model. It is therefore unclear how to meaningfully
@@ -244,7 +230,7 @@ See \code{\link[=resamplecSEMResults]{resamplecSEMResults()}} for details.
 }
 \examples{
 # ===========================================================================
-# Using the threecommonfactors dataset
+# Using the three common factors dataset
 # ===========================================================================
 model <- "
 # Structural model
@@ -261,7 +247,7 @@ res <- csem(threecommonfactors, model)
 a   <- assess(res) # computes all quality criteria (.quality_criterion = "all")
 a
 
-## The return value is a named list
+## The return value is a named list. Type for example:
 a$HTMT
 
 # You may also just compute a subset of the quality criteria
@@ -280,11 +266,13 @@ res <- csem(threecommonfactors, model,
 ## Look at the resamples
 res$Estimates$Estimates_resample$Estimates1$User_fun$Resampled[1:4, ]
 
-## Use infer() to compute e.g. the 95\% percentile confidence interval
+## Use infer() to compute e.g., the 95\% percentile confidence interval
 res_infer <- infer(res, .quantity = "CI_percentile")
+
+## The results are saved under the name "User_fun"
 res_infer$User_fun 
 
-## Several quality criteria can be resampeled simultaneously
+## Several quality criteria can be resampled simultaneously
 res <- csem(threecommonfactors, model, 
             .resample_method = "bootstrap",
             .R               = 40,

@@ -1,7 +1,7 @@
 Package: cSEM
 Title: Composite-Based Structural Equation Modeling
-Version: 0.2.0
-Date: 2020-03-30
+Version: 0.3.0
+Date: 2020-10-10
 Authors@R: c(person(given = "Manuel E.", family = "Rademaker",
                     role  = c("aut", "cre"),
                     email = "manuel.rademaker@uni-wuerzburg.de",
@@ -16,7 +16,8 @@ Authors@R: c(person(given = "Manuel E.", family = "Rademaker",
                     comment = c(ORCID = "0000-0002-7845-784X")),
              person(given = "Michael", family = "Klesel",
                     role  = c("ctb"),
-                    email = ""),
+                    email = "",
+                    comment = c(ORCID = "0000-0002-2884-1819")),
              person(given = "Theo K.", family = "Dijkstra",
                     role  = c("ctb"),
                     email = ""),
@@ -44,22 +45,23 @@ URL: https://github.com/M-E-Rademaker/cSEM,
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: abind, alabama, cli, crayon, expm, future.apply, future,
-        lavaan, magrittr, MASS, Matrix, matrixcalc, matrixStats,
-        polycor, psych, purrr, Rdpack, stats, symmoments, utils
-RdMacros: Rdpack
-RoxygenNote: 7.0.2
+Imports: abind, alabama, cli, crayon, expm (>= 0.999-5), future.apply,
+        future, lavaan, magrittr, MASS, Matrix, matrixcalc,
+        matrixStats, polycor, progressr, psych, purrr, Rdpack, rlang,
+        stats, symmoments, utils, lifecycle
+RdMacros: Rdpack, lifecycle
+RoxygenNote: 7.1.1
 Suggests: dplyr, tidyr, knitr, nnls, prettydoc, plotly, rmarkdown,
-        listviewer, testthat, ggplot2
+        rootSolve, listviewer, testthat, ggplot2
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2020-03-28 14:46:24 UTC; mas55yq
+Packaged: 2020-10-12 16:14:36 UTC; mas55yq
 Author: Manuel E. Rademaker [aut, cre]
     (<https://orcid.org/0000-0002-8902-3561>),
   Florian Schuberth [aut] (<https://orcid.org/0000-0002-2110-9086>),
   Tamara Schamberger [ctb] (<https://orcid.org/0000-0002-7845-784X>),
-  Michael Klesel [ctb],
+  Michael Klesel [ctb] (<https://orcid.org/0000-0002-2884-1819>),
   Theo K. Dijkstra [ctb],
   Jörg Henseler [ctb] (<https://orcid.org/0000-0002-9736-3048>)
 Repository: CRAN
-Date/Publication: 2020-03-29 11:00:20 UTC
+Date/Publication: 2020-10-12 16:40:03 UTC

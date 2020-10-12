@@ -4,7 +4,9 @@
 \name{BergamiBagozzi2000}
 \alias{BergamiBagozzi2000}
 \title{Data: BergamiBagozzi2000}
-\format{An object of class \code{data.frame} with 305 rows and 22 columns.}
+\format{
+An object of class \code{data.frame} with 305 rows and 22 columns.
+}
 \source{
 Survey among South Korean employees conducted and
 reported by \insertCite{Bergami2000;textual}{cSEM}.
@@ -21,7 +23,7 @@ from a larger survey among South Korean employees conducted and
 reported by \insertCite{Bergami2000;textual}{cSEM}. It is
 also used in  \insertCite{Hwang2014;textual}{cSEM} and
 \insertCite{Henseler2020;textual}{cSEM}
-for demonstration purposes (Tutorial 6).
+for demonstration purposes, see the corresponding tutorial.
 }
 \examples{
 #============================================================================

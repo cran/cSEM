@@ -11,12 +11,14 @@
 print.cSEMAssess <- function(x, ...) {
   
   cat2(rule2(type = 2))
+  
+  ## AVE, R2, R2_adj -----------------------------------------------------------
   nn <- intersect(names(x), c("AVE", "R2", "R2_adj"))
   
   if(length(nn) > 0) {
     # Select all construct names that are either endogenous (LHS) variables (for 
-    # the R2) or constructs for which the AVE was computed. 
-    c_names <- unique(c(names(x[["AVE"]]), names(x[["R2"]])))
+    # the R2 and the R2_adj) or constructs for which the AVE was computed. 
+    c_names <- unique(c(names(x[["AVE"]]), names(x[["R2"]]), names(x[["R2_adj"]])))
     if(length(c_names) > 0) {
       l <- max(nchar(c_names)) 
       nn <- list(nn)
@@ -46,8 +48,10 @@ print.cSEMAssess <- function(x, ...) {
     }
   }
   
-  if(any(names(x) == "reliability")) {
-    rel <- x$reliability
+  ## Reliability ---------------------------------------------------------------
+  
+  if(any(names(x) == "Reliability")) {
+    rel <- x$Reliability
     c_names <- names(rel[[1]])
     if(length(c_names) > 0) {
       l <- max(nchar(c_names))
@@ -73,6 +77,8 @@ print.cSEMAssess <- function(x, ...) {
       } 
     }
   }
+  
+  ## Alternative reliability measures ------------------------------------------
   
   nn <- intersect(names(x), c("RhoC", "RhoC_mm", "RhoC_weighted", "RhoC_weighted_mm",
                               "RhoT", "RhoT_weighted"))
@@ -119,10 +125,11 @@ print.cSEMAssess <- function(x, ...) {
     }
   }
   
+  ## Distance and fit measures -------------------------------------------------
   
-  if(any(names(x) %in% c("Chi_square", "Chi_square_df", "CFI", "GFI", "IFI", 
+  if(any(names(x) %in% c("Chi_square", "Chi_square_df", "CFI", "CN", "GFI", "IFI", 
                          "NFI", "NNFI", "RMSEA", "Df",
-                         "RMS_theta", "RMS_theta_mi", "SRMR", "DG", "DL", "DML"))) {
+                         "RMS_theta", "SRMR", "DG", "DL", "DML"))) {
     cat2("\n\n", rule2("Distance and fit measures"), "\n")
     
     if(any(names(x) == "DG")) {
@@ -145,6 +152,10 @@ print.cSEMAssess <- function(x, ...) {
     }
     if(any(names(x) == "CFI")) {
       cat2(col_align("\n\tCFI", 17), "= ", x$CFI)
+    }
+    if(any(names(x) == "CN")) {
+      cat2(col_align("\n\tCN", 17), "= ")
+      cat(x$CN, sep = ", ")
     }
     if(any(names(x) == "GFI")) {
       cat2(col_align("\n\tGFI", 17), "= ", x$GFI)
@@ -176,6 +187,57 @@ print.cSEMAssess <- function(x, ...) {
     }
   }
   
+  ## Model selection criteria --------------------------------------------------
+  nn <- intersect(names(x), c("AIC", "AICc", "AICu", "BIC", "FPE", "GM", "HQ", 
+                              "HQc", "Mallows_Cp"))
+  if(length(nn) > 0) {
+    # Get names of the endogenous variables
+    c_names <- names(x[[nn[1]]])
+    if(length(c_names) > 0) {
+      cat2("\n\n", rule2("Model selection criteria"))
+      l <- max(nchar(c_names)) 
+      
+      ## If more than 4 selection criteria are to be printed: open a second/third
+      ## block otherwise print one block
+      if(length(nn) > 3) {
+        nn1 <- nn[1:3]
+        nn2 <- setdiff(nn, nn1)
+        if(length(nn2) > 3) {
+          nn2 <- nn2[1:3]
+          nn3 <- setdiff(nn, c(nn1, nn2))
+        }
+        nn <- list(nn1, nn2, nn3)
+      } else {
+        nn <- list(nn)
+      }
+      
+      for(j in seq_along(nn)) {
+        cat2(
+          "\n\n\t", 
+          col_align("Construct", max(l, nchar("Construct")) + 2)
+        )
+        for(k in nn[[j]]) {
+          cat2(
+            col_align(k, 14, align = "center")
+          )
+        }
+        
+        for(i in c_names) {
+          cat2(
+            "\n\t", 
+            col_align(i, max(l, nchar("Construct")) + 2)
+          )
+          
+          for(k in nn[[j]]) {
+            cat2(col_align(sprintf("%.4f",x[[k]][i]), 14, align = "center"))
+          }
+        } 
+      }
+    }
+  }
+
+  ## Variance inflation factors ------------------------------------------------
+  
   if(any(names(x) == "VIF")) {
     cat2("\n\n", rule2("Variance inflation factors (VIFs)"))
     for(i in rownames(x$VIF)) {
@@ -185,7 +247,7 @@ print.cSEMAssess <- function(x, ...) {
         col_align("Independent construct", max(nchar(names(x$VIF[i, ])), nchar("Independent construct")) + 2), 
         col_align("VIF value", 12, align = "center")
       )
-      for(j in names(x$VIF[i, ])) {
+      for(j in names(which(x$VIF[i, ] != 0))) {
         cat2(
           "\n\t", 
           col_align(j, max(nchar(names(x$VIF[i, ])), nchar("Independent construct")) + 2), 
@@ -194,6 +256,29 @@ print.cSEMAssess <- function(x, ...) {
       }
     }
   }
+  
+  ## Variance inflation factors for modeB constructs ---------------------------
+  
+  if(any(names(x) == "VIF_modeB") && !is.na(x$VIF_modeB)) {
+    cat2("\n\n", rule2("Variance inflation factors (VIFs) for modeB constructs"))
+    for(i in rownames(x$VIF_modeB)) {
+      cat2("\n\n  Construct: '", i, "'\n")
+      cat2(
+        "\n\t", 
+        col_align("Weight", max(nchar(names(x$VIF_modeB[i, ])), nchar("Weight")) + 2), 
+        col_align("VIF value", 12, align = "center")
+      )
+      for(j in names(which(x$VIF_modeB[i, ] != 0))) {
+        cat2(
+          "\n\t", 
+          col_align(j, max(nchar(names(x$VIF_modeB[i, ])), nchar("Weight")) + 2), 
+          col_align(sprintf("%.4f", x$VIF_modeB[i, j]), 12, align = "center")
+        )  
+      }
+    }
+  }
+  
+  ## Effect size analysis ------------------------------------------------------
   
   if(any(names(x) == "F2")) {
     cat2("\n\n", rule2("Effect sizes (Cohen's f^2)"))
@@ -215,13 +300,16 @@ print.cSEMAssess <- function(x, ...) {
     }
   }
   
+  ## Validity assessment -------------------------------------------------------
+  
   if(any(names(x) %in% c("Fornell-Larcker", "HTMT"))) {
     cat2("\n\n", rule2("Validity assessment"))
     if(any(names(x) == "HTMT") && !is.null(x$HTMT)) {
       cat2("\n\n\tHeterotrait-monotrait ratio of correlations matrix (HTMT matrix)\n\n")
       if(x$Information$.inference) {
-        cat2("Values in the upper triangular part are the ", 
-             paste0(100*(1 - x$Information$.alpha), "%-Quantile of the bootstrap distribution.\n\n")) 
+        cat2("\tValues in the upper triangular part are the ", 
+             paste0(100*(1 - x$Information$.alpha), "%-quantile of the\n", 
+            "\tbootstrap distribution (using .ci = '", x$Information$.ci, "').\n\n")) 
       }
       print(x$HTMT)
     }
@@ -232,8 +320,9 @@ print.cSEMAssess <- function(x, ...) {
     }
   }
   
+  ## Effects -------------------------------------------------------------------
+  
   if(any(names(x) == "Effects")) {
-    ### Effects ----------------------------------------------------------------
     cat2("\n\n", rule2("Effects"), "\n\n")
     
     ## Confidence intervals
@@ -250,17 +339,21 @@ print.cSEMAssess <- function(x, ...) {
       cat("\n\n")
     }
     
-    ## Total effects
-    cat2("Estimated total effects:\n========================")
-    printEffects(x$Effects$Total_effect, .ci_colnames = ci_colnames, .what = "Total effect")
-    
-    ## Indirect effects
-    cat2("\n\nEstimated indirect effects:\n===========================")
-    printEffects(x$Effects$Indirect_effect, .ci_colnames = ci_colnames, .what = "Indirect effect")
-    
-    ### Variance accounted for -------------------------------------------------
-    cat2("\n\nVariance accounted for (VAF):\n=============================")
-    printEffects(x$Effects$Variance_accounted_for, .ci_colnames = ci_colnames, .what = "Effects")
+    if(any(names(x$Effects) == "Total_effect")) {
+      ## Total effects
+      cat2("Estimated total effects:\n========================")
+      printEffects(x$Effects$Total_effect, .ci_colnames = ci_colnames, .what = "Total effect")
+    }
+    if(any(names(x$Effects) == "Indirect_effect")) {
+      ## Indirect effects
+      cat2("\n\nEstimated indirect effects:\n===========================")
+      printEffects(x$Effects$Indirect_effect, .ci_colnames = ci_colnames, .what = "Indirect effect")
+    }
+    if(any(names(x$effects) == "Variance_accounted_for")) {
+      ### Variance accounted for -------------------------------------------------
+      cat2("\n\nVariance accounted for (VAF):\n=============================")
+      printEffects(x$Effects$Variance_accounted_for, .ci_colnames = ci_colnames, .what = "Effects")
+    }
   }
   
   cat2("\n", rule2(type = 2), "\n")

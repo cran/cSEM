@@ -4,7 +4,9 @@
 \name{LancelotMiltgenetal2016}
 \alias{LancelotMiltgenetal2016}
 \title{Data: LancelotMiltgenetal2016}
-\format{An object of class \code{data.frame} with 1090 rows and 11 columns.}
+\format{
+An object of class \code{data.frame} with 1090 rows and 11 columns.
+}
 \source{
 This data has been collected through a cooperation with the European Commission
 Joint Research Center Institute for Prospective Technological Studies, contract
@@ -21,7 +23,8 @@ A data frame containing 10 variables with 1090 observations.
 The data was analysed by \insertCite{Lancelot-Miltgen2016;textual}{cSEM}
 to study young consumers’ adoption intentions of a location tracker technology
 in the light of privacy concerns. It is also used in
-\insertCite{Henseler2020;textual}{cSEM} for demonstration purposes (Tutorial 9).
+\insertCite{Henseler2020;textual}{cSEM} for demonstration purposes, see the
+corresponding tutorial.
 }
 \examples{
 #============================================================================

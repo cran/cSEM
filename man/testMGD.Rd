@@ -10,7 +10,9 @@ testMGD(
  .approach_p_adjust     = "none",
  .approach_mgd          = c("all", "Klesel", "Chin", "Sarstedt", 
                             "Keil", "Nitzl", "Henseler", "CI_para","CI_overlap"),
+ .output_type           = c("complete", "structured"),
  .parameters_to_compare = NULL,
+ .eval_plan             = c("sequential", "multiprocess"),                           
  .handle_inadmissibles  = c("replace", "drop", "ignore"),
  .R_permutation         = 499,
  .R_bootstrap           = 499,
@@ -37,10 +39,18 @@ Approach used for the multi-group comparison. One of: "\emph{all}", "\emph{Klese
 "\emph{Sarstedt}", "\emph{Keil}, "\emph{Nitzl}", "\emph{Henseler}", "\emph{CI_para}", or "\emph{CI_overlap}".
 Default to "\emph{all}" in which case all approaches are computed (if possible).}
 
+\item{.output_type}{Character string. The type of output to return. One of
+"\emph{complete}" or "\emph{structured}". See the Value section for details. Defaults to
+"\emph{complete}".}
+
 \item{.parameters_to_compare}{A model in \link[lavaan:model.syntax]{lavaan model syntax} indicating which
 parameters (i.e, path (\code{~}), loadings (\verb{=~}), weights (\verb{<~}), or correlations (\verb{~~})) should be
 compared across groups. Defaults to \code{NULL} in which case all weights, loadings and
 path coefficients of the originally specified model are compared.}
+
+\item{.eval_plan}{Character string. The evaluation plan to use. One of
+"\emph{sequential}" or "\emph{multiprocess}". In the latter case
+all available cores will be used. Defaults to "\emph{sequential}".}
 
 \item{.handle_inadmissibles}{Character string. How should inadmissible results
 be treated? One of "\emph{drop}", "\emph{ignore}", or "\emph{replace}". If "\emph{drop}", all
@@ -64,19 +74,20 @@ case an arbitrary seed is chosen. Note that the scope of the seed is limited
 to the body of the function it is used in. Hence, the global seed will
 not be altered!}
 
-\item{.type_ci}{Character string. It indicates which confidence interval should be calculated.
-For possible choices, see the \code{.quantity} argument of the \code{\link{infer}} function.
-In the test_mgd function default is to "\emph{CI_percentile}".}
+\item{.type_ci}{Character string. Which confidence interval should be calculated?
+For possible choices, see the \code{.quantity} argument of the \code{\link[=infer]{infer()}} function.
+Only used if \code{.approch_mgd} is one of "\emph{CI_para}" or "\emph{CI_overlap}". Ignored otherwise.
+Defaults to "\emph{CI_percentile}".}
 
 \item{.type_vcv}{Character string. Which model-implied correlation
-matrix is calculated?
+matrix should be calculated?
 One of "\emph{indicator}" or "\emph{construct}". Defaults to "\emph{indicator}".}
 
 \item{.verbose}{Logical. Should information (e.g., progress bar) be printed
 to the console? Defaults to \code{TRUE}.}
 }
 \value{
-A list of class \code{cSEMTestMGD}. Technically, \code{cSEMTestMGD} is a
+If \code{.output_type = "complete"} a list of class \code{cSEMTestMGD}. Technically, \code{cSEMTestMGD} is a
 named list containing the following list elements:
 
 \describe{
@@ -90,8 +101,25 @@ named list containing the following list elements:
 \item{\verb{$CI_para}}{A list with elements,  \code{Decision}, and \code{Decision_overall}}
 \item{\verb{$CI_overlap}}{A list with elements,  \code{Decision}, and \code{Decision_overall}}
 }
+
+If \code{.output_type = "structured"} a tibble (data frame) with the following columns
+is returned.
+
+\describe{
+\item{\code{Test}}{The name of the test.}
+\item{\code{Comparision}}{The parameter that was compared across groups. If "overall"
+the overall fit of the model was compared.}
+\item{\verb{alpha\%}}{The test decision for a given "alpha" level. If \code{TRUE} the null
+hypotheses was rejected; if FALSE it was not rejected.}
+\item{\code{p-value_correction}}{The p-value correction.}
+\item{\code{CI_type}}{Only for the "CI_para" and the "CI_overlap" test. Which confidence interval was used.}
+\item{\code{Distance_metric}}{Only for Test = "Klesel". Which distance metric was used.}
+}
 }
 \description{
+\lifecycle{stable}
+}
+\details{
 This function performs various tests proposed in the context of multigroup analysis.
 
 The following tests are implemented:
@@ -157,6 +185,17 @@ is by group and number of parameters. By default
 no multiple testing correction is done, however, several common
 adjustments are available via \code{.approach_p_adjust}. See
 \code{\link[stats:p.adjust]{stats::p.adjust()}} for details.}
+\item{\code{.approach_mgd = "Henseler"}: Approach suggested by \insertCite{Henseler2007a;textual}{cSEM}}{
+Groups are compared in terms of parameter differences across groups.
+In doing so, the bootstrap estimates of one parameter are compared across groups.
+In the literature, this approach is also known as PLS-MGA.
+Originally, this test was proposed as an one-sided test.
+In this function we perform a left-sided and a right-sided test
+to investigate whether a parameter differs across two groups. In doing so, the significance
+level is divided by 2 and compared to p-value of the left and right-sided test.
+Moreover, \code{.approach_p_adjust} is ignored and no overall decision
+is returned.
+For a more detailed description, see also \insertCite{Henseler2009;textual}{cSEM}.}
 \item{\code{.approach_mgd = "CI_param"}: Approach mentioned in \insertCite{Sarstedt2011;textual}{cSEM}}{
 This approach is based on the confidence intervals constructed around the
 parameter estimates of the two groups. If the parameter of one group falls within
@@ -169,10 +208,11 @@ parameter estimates of the two groups. If the two CIs overlap, it can be conclud
 that there is no group difference.
 Since it is based on the confidence intervals \code{.approach_p_adjust} is ignored.}
 }
-}
-\details{
+
 Use \code{.approach_mgd} to choose the approach. By default all approaches are computed
 (\code{.approach_mgd = "all"}).
+
+For convenience, two types of output are available. See the "Value" section below.
 
 By default, approaches based on parameter differences across groups compare
 all parameters (\code{.parameters_to_compare = NULL}). To compare only
