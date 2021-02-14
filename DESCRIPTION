@@ -1,7 +1,7 @@
 Package: cSEM
 Title: Composite-Based Structural Equation Modeling
-Version: 0.3.0
-Date: 2020-10-10
+Version: 0.3.1
+Date: 2021-02-14
 Authors@R: c(person(given = "Manuel E.", family = "Rademaker",
                     role  = c("aut", "cre"),
                     email = "manuel.rademaker@uni-wuerzburg.de",
@@ -55,7 +55,7 @@ Suggests: dplyr, tidyr, knitr, nnls, prettydoc, plotly, rmarkdown,
         rootSolve, listviewer, testthat, ggplot2
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2020-10-12 16:14:36 UTC; mas55yq
+Packaged: 2021-02-14 22:17:47 UTC; mas55yq
 Author: Manuel E. Rademaker [aut, cre]
     (<https://orcid.org/0000-0002-8902-3561>),
   Florian Schuberth [aut] (<https://orcid.org/0000-0002-2110-9086>),
@@ -64,4 +64,4 @@ Author: Manuel E. Rademaker [aut, cre]
   Theo K. Dijkstra [ctb],
   Jörg Henseler [ctb] (<https://orcid.org/0000-0002-9736-3048>)
 Repository: CRAN
-Date/Publication: 2020-10-12 16:40:03 UTC
+Date/Publication: 2021-02-14 22:50:20 UTC
