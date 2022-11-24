@@ -90,7 +90,7 @@ exportToExcel <- function(
   } else if(inherits(.postestimation_object, "cSEMAssess")) {
     elements <- c("AVE", "R2", "R2_adj", "Reliability",
                   "Distance and Fit measures", "Model selection criteria", 
-                  "VIFs", "Effect sizes", "HTMT", "Fornell-Larcker matrix")
+                  "VIFs", "Effect sizes", "HTMT", "HTMT2", "Fornell-Larcker matrix")
     
     for(element in elements) {
       ## Add worksheets
@@ -130,7 +130,7 @@ exportToExcel <- function(
     # Distance and fit
     d <- data.frame(
       "Geodesic distance"          = .postestimation_object$DG,
-      "Squared Euclidian distance" = .postestimation_object$DL,
+      "Squared Euclidean distance" = .postestimation_object$DL,
       "ML distance"                = .postestimation_object$DML,
       "Chi_square"                 = .postestimation_object$Chi_square,
       "Chi_square_df"              = .postestimation_object$Chi_square_df,
@@ -170,7 +170,12 @@ exportToExcel <- function(
     openxlsx::writeData(wb, sheet = "HTMT", if(is.null(.postestimation_object$HTMT)) {
       NA
     } else {
-      .postestimation_object$HTMT
+      .postestimation_object$HTMT$out_print
+    })
+    openxlsx::writeData(wb, sheet = "HTMT2", if(is.null(.postestimation_object$HTMT2)) {
+      NA
+    } else {
+      .postestimation_object$HTMT2$out_print
     })
     openxlsx::writeData(wb, sheet = "Fornell-Larcker matrix", if(is.null(.postestimation_object$`Fornell-Larcker`)) {
       NA

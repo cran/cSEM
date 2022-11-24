@@ -14,7 +14,7 @@
 #'  
 #' If `.by_equation == FALSE` the AIC, the BIC and the HQ for whole model 
 #' are calculated. All other criteria are currently ignored in this case! 
-#' The relevant formulae are (see, e.g., \insertCite{Akaike1974}{cSEM},
+#' The relevant formula are (see, e.g., \insertCite{Akaike1974}{cSEM},
 #' \insertCite{Schwarz1978;textual}{cSEM}, 
 #' \insertCite{Hannan1979;textual}{cSEM}): 
 #' 
@@ -475,7 +475,7 @@ calculateDf <- function(
     for(j in names_constructs) {
       if(construct_order[j] == "Second order") {
         if(x22$construct_type[j] == "Composite") {
-          ## Number of weights minus 1 (since weights are choosen s.t. Var(eta) = 1)
+          ## Number of weights minus 1 (since weights are chosen s.t. Var(eta) = 1)
           n_weights <- sum(x22$measurement[j, ]) - 1 
           
           ## Number of free non-redundant off-diagonal element of each intra-block
@@ -1013,98 +1013,17 @@ calculateRhoT <- function(
 }
 
 
-
-#' HTMT
-#'
-#' Computes either the heterotrait-monotrait ratio of correlations (HTMT) based on 
-#' \insertCite{Henseler2015;textual}{cSEM} or its advancement HTMT2. While the HTMT
-#' is a consistent estimator for the construct correlation in case of tau-equivalent
-#'  measurement models, the HTMT2 is a consistent estimator for congeneric measurement
-#'  models. In general, they are used to assess discriminant validity.
+#' core function that calculates the HTMT
+#' @noRd
 #' 
-#' Computation of the HTMT assumes that all intra-block and inter-block 
-#' correlations between indicators are either all-positive or all-negative.
-#' A warning is given if this is not the case. If all intra-block or inter-block
-#' correlations are negative the absolute HTMT values are returned (`.absolute = TRUE`).
-#' 
-#' To obtain the 1-alpha%-quantile of the bootstrap distribution for each HTMT 
-#' value set `.inference = TRUE`. To choose the type of confidence interval to use
-#' to compute the 1-alpha%-quantile, use `.ci`. To control the bootstrap process,
-#' arguments `.handle_inadmissibles`, `.R` and `.seed` are available. 
-#' 
-#' Since the HTMT is defined with respect to a classical true score measurement
-#' model only concepts modeled as common factors are considered by default.
-#' For concepts modeled as composites the HTMT may be computed by setting
-#' `.only_common_factors = FALSE`, however, it is unclear how to
-#' interpret values in this case.
-#' 
-#' @usage calculateHTMT(
-#'  .object               = NULL,
-#'  .type_htmt            = c('htmt','htmt2'),
-#'  .absolute             = TRUE,
-#'  .alpha                = 0.05,
-#'  .ci                   = c("CI_percentile", "CI_standard_z", "CI_standard_t", 
-#'                            "CI_basic", "CI_bc", "CI_bca", "CI_t_interval"),
-#'  .handle_inadmissibles = c("drop", "ignore", "replace"),
-#'  .inference            = FALSE,
-#'  .only_common_factors  = TRUE,
-#'  .R                    = 499,
-#'  .seed                 = NULL,
-#'  ...
-#' )
-#'
-#' @inheritParams csem_arguments
-#' @param .alpha A numeric value giving the significance level. 
-#'   Defaults to `0.05`.
-#' @param .ci A character strings naming the type of confidence interval to use 
-#'   to compute the 1-alpha% quantile of the bootstrap HTMT values. For possible 
-#'   choices see [infer()]. Ignored
-#'   if `.inference = FALSE`. Defaults to "*CI_percentile*".
-#' @param ... Ignored.
-#'
-#' @return A lower tringular matrix of HTMT values. If `.inference = TRUE`
-#'   the upper tringular part is the 1-.alpha%-quantile of the HTMT's bootstrap
-#'   distribution.
-#' 
-#' @seealso [assess()], [csem], [cSEMResults]
-#' 
-#' @references 
-#' 
-#' \insertAllCited{}
-#' 
-#' @export
-
-calculateHTMT <- function(
+calculateHTMTcore <- function(
   .object               = NULL,
-  .type_htmt            = c('htmt','htmt2'),
-  .absolute             = TRUE,
-  .alpha                = 0.05,
-  .ci                   = c("CI_percentile", "CI_standard_z", "CI_standard_t", 
-                            "CI_basic", "CI_bc", "CI_bca", "CI_t_interval"),
-  .handle_inadmissibles = c("drop", "ignore", "replace"),
-  .inference            = FALSE,
-  .only_common_factors  = TRUE,
-  .R                    = 499,
-  .seed                 = NULL,
-  ...
+  .type_htmt            = NULL,
+  .absolute             = NULL,
+  .only_common_factors  = NULL
 ){
-  .handle_inadmissibles <- match.arg(.handle_inadmissibles)
-  .ci                   <- match.arg(.ci) # allow only one CI
-  .type_htmt            <- match.arg(.type_htmt)
-
-  if(inherits(.object, "cSEMResults_multi")) {
-    out <- lapply(.object, calculateHTMT,
-                  .type_htmt     = .type_htmt,
-                  .absolute = .absolute,
-                  .alpha                = .alpha,
-                  .handle_inadmissibles = .handle_inadmissibles,
-                  .inference            = .inference,
-                  .only_common_factors  = .only_common_factors,
-                  .R                    = .R,
-                  .seed                 = .seed
-                  )
-    return(out)
-  } else if(inherits(.object, "cSEMResults_default")) {
+  
+  if(inherits(.object, "cSEMResults_default")) {
     ## Get relevant quantities
     m <- .object$Information$Model
   } else if(inherits(.object, "cSEMResults_2ndorder")) {
@@ -1167,7 +1086,7 @@ calculateHTMT <- function(
     monocortemp<-S[x[[1]],x[[1]],drop=FALSE]
     # Set monotrait-heteromethod cor to one for single-indicator constructs 
     if(nrow(monocortemp)==1){
-     monocor1=1 
+      monocor1=1 
     }else{
       monocor1<-monocortemp[lower.tri(monocortemp)]
     }
@@ -1178,117 +1097,272 @@ calculateHTMT <- function(
     }else{
       monocor2<-monocortemp[lower.tri(monocortemp)]
     }
+
     hetcor<-c(S[x[[1]],x[[2]]])
     
     # return correlations as list of vectors containing correlations
     list(monocor1,monocor2,hetcor)
   })
   
+
   if(.type_htmt=='htmt2'){
     # calculate geometric mean of the correlations
     avg_cor<-lapply(correlations, function(x){
-      sapply(x, function(y){
-        prod(y)^(1/length(y))
-      })
+      sign_identification =1
+      # monotrait 1
+      if(abs(sum(sign(x[[1]]))) != length(x[[1]])){
+        warning2("The monotrait-heteromethod correlations show different signs.\n",
+        "Hence the HTMT2 cannot be calculated.")
+      }
+      temp1 <- exp(mean(log(x[[1]])))
+      # monotrait 2
+      if(abs(sum(sign(x[[2]]))) != length(x[[2]])){
+        warning2("The monotrait-heteromethod correlations show different signs.\n",
+        "Hence the HTMT2 cannot be calculated.")
+      }
+      temp2 <- exp(mean(log(x[[2]])))
+      # heterotrait
+      # If all hetertrait correlations are negative take the absolute value
+      # and return later the negative htmt value
+      if(sum(sign(x[[3]]))==-length(x[[3]])){
+        x[[3]] = abs(x[[3]])
+        sign_identification = -1
+      }
+      temp3 <- exp(mean(log(x[[3]])))
+      
+      # return the geometric means
+      c(temp1,temp2,temp3,sign_identification)
     })
   }
+  
+  
+  
   
   if(.type_htmt=='htmt'){
     # calculate the arithmetic mean of the correlations
     avg_cor<-lapply(correlations, function(x){
-      sapply(x, function(y){
-        mean(y)
-      })
+      sign_identification =1
+      # monotrait 1
+      if(abs(sum(sign(x[[1]]))) != length(x[[1]])){
+        warning2("The monotrait-heteromethod correlations show different signs.\n",
+        "This may render the HTMT not trustworthy.")
+      }
+      temp1 <- mean(x[[1]])
+      # monotrait 2
+      if(abs(sum(sign(x[[2]]))) != length(x[[2]])){
+        warning2("The monotrait-heteromethod correlations show different signs.\n",
+        "This may render the HTMT not trustworthy.")
+      }
+      temp2 <- mean(x[[2]])
+      # heterotrait
+      # If all hetertrait correlations are negative take the absolute value
+      # and return later the negative htmt value
+      if(sum(sign(x[[3]]))==-length(x[[3]])){
+        x[[3]] = abs(x[[3]])
+        sign_identification = -1
+      }
+      temp3 <- mean(x[[3]])
+      
+      # return the geometric means
+      c(temp1,temp2,temp3,sign_identification)
     })
-  }
-  
+    }
+
   # Compute HTMT
   htmts <- sapply(avg_cor,function(x){
-    x[3]/sqrt(x[1]*x[2])
+    x[3]/sqrt(x[1]*x[2]) * x[4]
   })
   
+
   # Sort HTMT values in matrix
   out<-matrix(0,
-         nrow=length(names(ind_blocks)),
-         ncol=length(names(ind_blocks)),
-         dimnames=list(names(ind_blocks),names(ind_blocks)))
+              nrow=length(names(ind_blocks)),
+              ncol=length(names(ind_blocks)),
+              dimnames=list(names(ind_blocks),names(ind_blocks)))
   out[lower.tri(out)]<-htmts
-  
-  
-  # ## Average correlation of the indicators within and across blocks
-  # ## The eta_i - eta_i (main diagonal) element is the monotrait-heteromethod correlation
-  # ## The eta_i - eta_j (off-diagonal) element is the heterotrait-heteromethod correlation
-  # avrg_cor <- cf_measurement %*% (S - diag(diag(S))) %*% t(cf_measurement) / S_elements
-  # 
-  # # Single-indicator constructs monotrait-heteromethod correlation is set to 1
-  # x <- rowSums(cf_measurement) == 1
-  # 
-  # if(sum(x) == 1) {
-  #   avrg_cor[x, x] <- 1
-  # } else if(sum(x) > 1) {
-  #   diag(avrg_cor[x, x]) <- 1 
-  # } # else: dont do anything
-  # 
-  # ## Compute HTMT
-  # # HTMT_ij = Average heterotrait-heteromethod correlation between i and j divided by 
-  # # the geometric means of the average monotrait-heteromethod correlation of 
-  # # eta_i with the average monotrait-heteromethod correlation of construct eta_j
-  # # (can be negative if some indicators are negatively correlated)
-  # tryCatch({sqrt(diag(avrg_cor) %o% diag(avrg_cor))},
-  #          warning = function(w) {
-  #            warning(
-  #              "The following warning occured in the calculateHTMT() function:\n",
-  #              "The geometric mean of the average monotrait-heteromethod",
-  #              " correlation of at least one construct with",
-  #              " the average monotrait-heteromethod correlation of the",
-  #              " other constructs is negative. NaNs produced.",
-  #              call. = FALSE)
-  #          }
-  # )
-  # out <- avrg_cor*lower.tri(avrg_cor) / suppressWarnings(sqrt(diag(avrg_cor) %o% diag(avrg_cor))) 
-  
+
   if(.absolute) {
     out <- abs(out)
   }
+  diag(out) <- 1
+  out
+} 
+
+
+#' HTMT
+#'
+#' Computes either the heterotrait-monotrait ratio of correlations (HTMT) based on 
+#' \insertCite{Henseler2015;textual}{cSEM} or the HTMT2 proposed by \insertCite{Roemer2021;textual}{cSEM}.
+#' While the HTMT is a consistent estimator for the construct correlation in 
+#' case of tau-equivalent measurement models, the HTMT2 is a consistent estimator
+#' for congeneric measurement models. In general, they are used to assess discriminant validity.
+#' 
+#' Computation of the HTMT/HTMT2 assumes that all intra-block and inter-block 
+#' correlations between indicators are either all-positive or all-negative.
+#' A warning is given if this is not the case.
+#' 
+#' To obtain bootstrap confidence intervals for the HTMT/HTMT2 values, set `.inference = TRUE`.
+#' To choose the type of confidence interval, use `.ci`. To control the bootstrap process,
+#' arguments `.R` and `.seed` are available. Note, that `.alpha` is multiplied by two
+#' because typically researchers are interested in one-sided bootstrap confidence intervals
+#' for the HTMT/HTMT2. 
+#' 
+#' Since the HTMT and the HTMT2 both assume a reflective measurement
+#' model only concepts modeled as common factors are considered by default.
+#' For concepts modeled as composites the HTMT may be computed by setting
+#' `.only_common_factors = FALSE`, however, it is unclear how to
+#' interpret values in this case.
+#' 
+#' 
+#' @usage calculateHTMT(
+#'  .object               = NULL,
+#'  .type_htmt            = c('htmt','htmt2'),
+#'  .absolute             = TRUE,
+#'  .alpha                = 0.05,
+#'  .ci                   = c("CI_percentile", "CI_standard_z", "CI_standard_t", 
+#'                            "CI_basic", "CI_bc", "CI_bca", "CI_t_interval"),
+#'  .inference            = FALSE,
+#'  .only_common_factors  = TRUE,
+#'  .R                    = 499,
+#'  .seed                 = NULL,
+#'  ...
+#' )
+#'
+#' @inheritParams csem_arguments
+#' @param .alpha A numeric value giving the significance level. 
+#'   Defaults to `0.05`.
+#' @param .ci A character strings naming the type of confidence interval to use 
+#'   to compute the 1-alpha% quantile of the bootstrap HTMT values. For possible 
+#'   choices see [infer()]. Ignored
+#'   if `.inference = FALSE`. Defaults to "*CI_percentile*".
+#' @param ... Ignored.
+#'
+#' @return A named list containing: 
+#' \itemize{
+#' \item the values of the HTMT/HTMT2, i.e., a matrix with the HTMT/HTMT2 values 
+#' at its lower triangular and if `.inference = TRUE` the upper triangular contains
+#'  the upper limit of the 1-2*.alpha% bootstrap confidence interval if the HTMT/HTMT2 is positive and 
+#'  the lower limit if the HTMT/HTMT2 is negative.
+#'  \item the lower and upper limits of the 1-2*.alpha% bootstrap confidence interval if 
+#'  `.inference = TRUE`; otherwise it is `NULL`.
+#'  \item the number of admissible bootstrap runs, i.e., the number of HTMT/HTMT2 values
+#'  calculated during bootstrap if `.inference = TRUE`; otherwise it is `NULL`.
+#'  Note, the HTMT2 is based on the geometric and thus cannot always be calculated. 
+#'  }
+#' 
+#' 
+#' @seealso [assess()], [csem], [cSEMResults]
+#' 
+#' @references 
+#' 
+#' \insertAllCited{}
+#' 
+#' @export
+
+calculateHTMT <- function(
+  .object               = NULL,
+  .type_htmt            = c('htmt','htmt2'),
+  .absolute             = TRUE,
+  .alpha                = 0.05,
+  .ci                   = c("CI_percentile", "CI_standard_z", "CI_standard_t", 
+                            "CI_basic", "CI_bc", "CI_bca", "CI_t_interval"),
+  .inference            = FALSE,
+  .only_common_factors  = TRUE,
+  .R                    = 499,
+  .seed                 = NULL,
+  ...
+){
+  .ci                   <- match.arg(.ci) # allow only one CI
+  .type_htmt            <- match.arg(.type_htmt)
+
+  if(inherits(.object, "cSEMResults_multi")) {
+    out <- lapply(.object, calculateHTMT,
+                  .type_htmt     = .type_htmt,
+                  .absolute = .absolute,
+                  .alpha                = .alpha,
+                  .inference            = .inference,
+                  .only_common_factors  = .only_common_factors,
+                  .R                    = .R,
+                  .seed                 = .seed
+                  )
+    return(out)
+  }
   
+  out <- calculateHTMTcore(.object = .object,
+                           .type_htmt = .type_htmt,
+                           .absolute =  .absolute,
+                           .only_common_factors = .only_common_factors
+    
+  )
+  
+# In case of inference
+
   if(.inference) {
+    
+    if(.absolute == TRUE){
+      warning2("For resampling the HTMT/HTMT2, it is recommended to to set .absolute to FALSE.")
+    }
+    
+
     # Bootstrap if necessary
     out_resample <- resamplecSEMResults(
       .object, 
-      .user_funs = list("HTMT" = calculateHTMT), 
+      .user_funs = list("HTMT" = calculateHTMTcore), 
       .type_htmt = .type_htmt,
       .absolute = .absolute,
-      .handle_inadmissibles = .handle_inadmissibles,
-      .inference = FALSE,
+      # .handle_inadmissible is always set to "ignore", 
+      # because in the resamplecSEMResults function inadmissibility is judged
+      # based on the estimation status and not whether the HTMT could be calculated 
+      .handle_inadmissibles = "ignore",
       .only_common_factors = .only_common_factors,
       .force = TRUE, # to force computation even if .object already contains resamples
       .R = .R,
       .seed = .seed
     )
     
+    # remove NaNs from out_resample manually; this removes also valid values if the row contains a NaN  
+    out_resample$Estimates$Estimates_resample$Estimates1$HTMT$Resampled <- na.omit(out_resample$Estimates$Estimates_resample$Estimates1$HTMT$Resampled) 
+    
+    # number of admissible HTMT calculations, i.e., not NaNs
+    nr_admissible <- dim(out_resample$Estimates$Estimates_resample$Estimates1$HTMT$Resampled)[1]
+
     # Compute quantile
     if(length(.alpha) == 1) {
       out_infer <- infer(out_resample, .alpha = .alpha*2, .quantity = .ci)
-      quants <- out_infer$HTMT[[1]][2, ] 
+      quants <- out_infer$HTMT[[1]] 
     } else {
       stop2(
         "The following error occured in the calculateHTMT() function:\n",
         "Only a single numeric probability accepted. You provided:", paste(.alpha, sep = ", "))
     }
     
-    ## Reassemble matrix
-    htmt_quantiles <- out
-    htmt_quantiles[] <- quants
+    quants_for_print <- sapply(1:dim(quants)[2],function(x){
+      # if HTMT(2) value is negative report the lower bound
+      if(c(out)[x]<0){
+        quants[1,x]  
+      } else { #otherwise report the upper bound
+        quants[2,x] 
+      }
+    })
+
+    # Assemble output 
+    temp_quantiles <- out
+    temp_quantiles[] <- quants_for_print 
     
-    htmt_inference <- out + t(htmt_quantiles)
+    out_for_print <- out + t(temp_quantiles)
+    diag(out_for_print) <- 1
     
-    # Return
-    diag(htmt_inference) <- 1
-    return(htmt_inference)
+
+  }else{ #if inference == FALSE
+    quants <- NULL
+    nr_admissible = NULL
+    out_for_print <- out
   }
+  
   # Return
-  diag(out) <- 1
-  out
+  list("htmts" = out_for_print,
+       "quantiles" = quants,
+       "nr_admissibles" = nr_admissible)
 }
 
 
@@ -1351,7 +1425,7 @@ calculateDG <- function(
   0.5 * sum(logEigenvaluessq)
 }
 
-#' @describeIn distance_measures The squared Euclidian distance
+#' @describeIn distance_measures The squared Euclidean distance
 #' @export
 
 calculateDL <- function(
@@ -1446,9 +1520,11 @@ NULL
 #' @describeIn fit_measures The chi square statistic.
 #' @export
 
-calculateChiSquare <- function(.object) {
+calculateChiSquare <- function(.object,
+                               .saturated = FALSE) {
   if(inherits(.object, "cSEMResults_multi")) {
-    out <- lapply(.object, calculateChiSquare)
+    out <- lapply(.object, calculateChiSquare,
+                  .saturated = .saturated)
     return(out)
   }
   if(inherits(.object, "cSEMResults_default")) {
@@ -1462,12 +1538,13 @@ calculateChiSquare <- function(.object) {
     )
   }
   
-  F0   <- calculateDML(.object)
+  F0   <- calculateDML(.object,
+                       .saturated=.saturated)
   
   (n - 1) * F0
 }
 
-#' @describeIn fit_measures The ChiSquare statistic divided by its degrees of freedom.
+#' @describeIn fit_measures The Chi square statistic divided by its degrees of freedom.
 #' @export
 
 calculateChiSquareDf <- function(.object) {
@@ -1972,7 +2049,36 @@ calculateVIFModeB <- function(.object = NULL) {
     # continue
   } else if(inherits(.object, "cSEMResults_2ndorder")) {
     out <- lapply(.object, calculateVIFModeB)
-    return(out)
+    
+    # Create a matrix as output
+      # If both stages are NA --> return NA
+      # If First_Stage is NA, and Second isnt --> return only Second_stage matrix
+      # If only First_stage is not NA --> return only First_stage matrix
+      # If both are not NA, combine and return combined matrix.
+      
+    VIF <- if(is.null(out$First_stage)) {
+        if(is.null(out$Second_stage)) {
+          # 1st is NULL and 2nd is NULL, i.e., ModeB was not applied in any of the two stages
+          NULL
+        } else {
+          # 1st is NULL and 2nd is not NULL
+          out$Second_stage
+        }
+      } else {
+        if(is.null(out$Second_stage)) {
+          # 1st is not NULL and 2nd is NULL
+          out$First_stage
+        } else {
+          # Non is NULL
+          out_temp <- rbind(cbind(out$First_stage, matrix(0, nrow = nrow(out$First_stage), ncol = ncol(out$Second_stage))),
+                            cbind(matrix(0, nrow = nrow(out$Second_stage), ncol = ncol(out$First_stage)), out$Second_stage))
+          rownames(out_temp) <- c(paste0(rownames(out$First_stage),'_1stStage'), paste0(rownames(out$Second_stage),'_2ndStage'))
+          colnames(out_temp) <- c(colnames(out$First_stage), colnames(out$Second_stage))
+          out_temp
+        }
+      }
+    
+    return(VIF)
   } else {
     stop2(
       "The following error occured in the calculateVIFModeB() function:\n",
@@ -2018,7 +2124,7 @@ calculateVIFModeB <- function(.object = NULL) {
     })
     names(VIF) <- names(modesB)
   } else {
-    VIF <- NA
+     VIF <- NULL #Set to NULL and not NA because anyna checks the complete list which creates problems in the print function 
   }
   
   ## Make output a matrix
@@ -2027,7 +2133,7 @@ calculateVIFModeB <- function(.object = NULL) {
   #       Currently, the .user_funs functions 
   #       need to return a vector or a matrix.
   
-  if(!anyNA(VIF)) {
+  if(!is.null(VIF)) {
     mm <- m[names(modesB), colSums(m[names(modesB), , drop = FALSE]) != 0 , drop = FALSE]
     tm <- t(mm)
     tm[which(tm == 1)] <- unlist(VIF)

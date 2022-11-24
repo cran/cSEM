@@ -12,7 +12,7 @@ resamplecSEMResults(
  .R2                    = 199,
  .handle_inadmissibles  = c("drop", "ignore", "replace"),
  .user_funs             = NULL,
- .eval_plan             = c("sequential", "multiprocess"),
+ .eval_plan             = c("sequential", "multicore", "multisession"),
  .force                 = FALSE,
  .seed                  = NULL,
  .sign_change_option    = c("none","individual","individual_reestimate",
@@ -30,7 +30,7 @@ resamplecSEMResults(
 from a resample. One of: "\emph{none}", "\emph{bootstrap}" or "\emph{jackknife}". For
 "\emph{bootstrap}" the number of draws is provided via \code{.R2}. Currently,
 resampling from each resample is only required for the studentized confidence
-intervall ("\emph{CI_t_interval}") computed by the \code{\link[=infer]{infer()}} function. Defaults to "\emph{none}".}
+interval ("\emph{CI_t_interval}") computed by the \code{\link[=infer]{infer()}} function. Defaults to "\emph{none}".}
 
 \item{.R}{Integer. The number of bootstrap replications. Defaults to \code{499}.}
 
@@ -55,7 +55,7 @@ vector but matrices are also accepted. However, the output will be
 vectorized (columnwise) in this case. See the examples section for details.}
 
 \item{.eval_plan}{Character string. The evaluation plan to use. One of
-"\emph{sequential}" or "\emph{multiprocess}". In the latter case
+"\emph{sequential}", "\emph{multicore}", or "\emph{multisession}". In the two latter cases
 all available cores will be used. Defaults to "\emph{sequential}".}
 
 \item{.force}{Logical. Should .object be resampled even if it contains resamples
@@ -84,7 +84,7 @@ Each list element is a list containing elements
 row representing one resample for each of the \code{K} parameters/statistics.
 \verb{$Original} contains the original estimates (vectorized by column if the output of
 the user provided function is a matrix.}
-\item {\verb{$Information_resamples}: A list containing addtional information.}
+\item {\verb{$Information_resamples}: A list containing additional information.}
 }
 Use \verb{str(<.object>, list.len = 3)} on the resulting object for an overview.
 }
@@ -98,7 +98,7 @@ The function is called by \code{\link[=csem]{csem()}} if the user sets
 Given \code{M} resamples (for bootstrap \code{M = .R} and for jackknife \code{M = N}, where
 \code{N} is the number of observations) based on the data used to compute the
 \link{cSEMResults} object provided via \code{.object}, \code{resamplecSEMResults()} essentially calls
-\code{\link[=csem]{csem()}} on each resample using the arguments of the origianl call (ignoring any arguments
+\code{\link[=csem]{csem()}} on each resample using the arguments of the original call (ignoring any arguments
 related to resampling) and returns estimates for each of a subset of
 practically useful resampled parameters/statistics computed by \code{\link[=csem]{csem()}}.
 Currently, the following estimates are computed and returned by default based
@@ -118,7 +118,7 @@ be a (named) vector but matrices are also accepted.
 However, the output will be vectorized (columnwise) in this case.
 See the examples section for details.
 
-Both resampling the origianl \link{cSEMResults} object (call it "first resample")
+Both resampling the original \link{cSEMResults} object (call it "first resample")
 and resampling based on a resampled \link{cSEMResults} object (call it "second resample")
 are supported. Choices for the former
 are "\emph{bootstrap}" and "\emph{jackknife}". Resampling based on a resample is turned off
@@ -147,30 +147,30 @@ but should be increased in real applications. See e.g.,
 \insertCite{Efron2016;textual}{cSEM} for recommendations.
 For jackknife \code{.R} are \code{.R2} are ignored.
 
-Resampling may produce inadmissble results (as checked by \code{\link[=verify]{verify()}}).
+Resampling may produce inadmissible results (as checked by \code{\link[=verify]{verify()}}).
 By default these results are dropped however users may choose to \code{"ignore"}
-or \code{"replace"} inadmissble results in which resampling continious until
-the necessary number of admissble results is reached.
+or \code{"replace"} inadmissible results in which resampling continuous until
+the necessary number of admissible results is reached.
 
-The \pkg{cSEM} package supports (multi)processing via the \href{https://github.com/HenrikBengtsson/future}{future}
+The \pkg{cSEM} package supports (multi)processing via the \href{https://github.com/HenrikBengtsson/future/}{future}
 framework \insertCite{Bengtsson2018}{cSEM}. Users may simply choose an evaluation plan
 via \code{.eval_plan} and the package takes care of all the complicated backend
 issues. Currently, users may choose between standard single-core/single-session
-evaluation (\code{"sequential"}) and multiprocessing (\code{"multiprocess"}). The future package
+evaluation (\code{"sequential"}) and multiprocessing (\code{"multisession"} or \code{"multicore"}). The future package
 provides other options (e.g., \code{"cluster"} or \code{"remote"}), however, they probably
 will not be needed in the context of the \pkg{cSEM} package as simulations usually
-do not require high-performance clusters. Depeding on the operating system, the future
+do not require high-performance clusters. Depending on the operating system, the future
 package will manage to distribute tasks to multiple R sessions (Windows)
 or multiple cores. Note that multiprocessing is not necessary always faster
 when only a "small" number of replications is required as the overhead of
 initializing new sessions or distributing tasks to different cores
-will not immediatley be compensated by the avaiability of multiple sessions/cores.
+will not immediately be compensated by the availability of multiple sessions/cores.
 
 Random number generation (RNG) uses the L'Ecuyer-CRMR RGN stream as implemented in the
-\href{https://github.com/HenrikBengtsson/future.apply}{future.apply package} \insertCite{Bengtsson2018a}{cSEM}.
+\href{https://github.com/HenrikBengtsson/future.apply/}{future.apply package} \insertCite{Bengtsson2018a}{cSEM}.
 It is independent of the evaluation plan. Hence, setting e.g., \code{.seed = 123} will
 generate the same random number and replicates
-for both \code{.eval_plan = "sequential"} and \code{.eval_plan = "multiprocess"}.
+for both \code{.eval_plan = "sequential"}, \code{.eval_plan = "multisession"}, and \code{.eval_plan = "multicore"}.
 See \link[future.apply:future_lapply]{?future_lapply} for details.
 }
 \examples{
@@ -258,7 +258,7 @@ boot2 <- resamplecSEMResults(
   .R                = 50,
   .resample_method2 = "bootstrap", 
   .R2               = 20,
-  .eval_plan        = "multiprocess", 
+  .eval_plan        = "multisession", 
   .seed             = 1303
   )
 

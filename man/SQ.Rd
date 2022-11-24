@@ -16,12 +16,12 @@ SQ
 \description{
 A data frame containing 23 variables with 411 observations. The original
 indicators were measured on a 6-point scale. In this version of the dataset,
-the indidcators are scaled to be between 0 and 100.
+the indicators are scaled to be between 0 and 100.
 }
 \details{
 The data comes from a European manufacturer of durable consumer goods and was
 studied by \insertCite{Bliemel2004;textual}{cSEM} who focused on service quality.
-It is also used in \insertCite{Henseler2020;textual}{cSEM}
+It is also used in \insertCite{Henseler2021;textual}{cSEM}
 for demonstration purposes, see the corresponding tutorial.
 }
 \references{

@@ -2,7 +2,7 @@
 #'
 #' This dataset contains the variables from a customer satisfaction study of 
 #' a Spanish credit institution on 250 customers. The data is identical to
-#' the dataset provided by the \href{https://github.com/gastonstat/plspm}{plspm} package
+#' the dataset provided by the \href{https://github.com/gastonstat/plspm/}{plspm} package
 #' but with the last column  (`gender`) removed. If you are looking for the original
 #' dataset use the [satisfaction_gender] dataset.
 #'
@@ -43,7 +43,7 @@
 #' 
 #' 
 #' 
-#' @source The \href{https://github.com/gastonstat/plspm}{plspm} package (version  0.4.9). 
+#' @source The \href{https://github.com/gastonstat/plspm/}{plspm} package (version  0.4.9). 
 #' Original source according to \pkg{plspm}:
 #' "Laboratory of Information Analysis and Modeling (LIAM). 
 #' Facultat d'Informatica de Barcelona, Universitat Politecnica de Catalunya".
@@ -53,7 +53,7 @@
 #'
 #' This data set contains the variables from a customer satisfaction study of 
 #' a Spanish credit institution on 250 customers. The data is taken from the
-#' \href{https://github.com/gastonstat/plspm}{plspm} package. For convenience, 
+#' \href{https://github.com/gastonstat/plspm/}{plspm} package. For convenience, 
 #' there is a version of the dataset with the last column (`gender`) removed: [satisfaction].
 #'
 #' @docType data
@@ -91,7 +91,7 @@
 #'                    and the sense of loyalty.}
 #'   \item{gender}{The sex of the respondent.}
 #' }
-#' @source The \href{https://github.com/gastonstat/plspm}{plspm} package (version  0.4.9). 
+#' @source The \href{https://github.com/gastonstat/plspm/}{plspm} package (version  0.4.9). 
 #' Original source according to \pkg{plspm}:
 #' "Laboratory of Information Analysis and Modeling (LIAM). 
 #' Facultat d'Informatica de Barcelona, Universitat Politecnica de Catalunya".
@@ -106,11 +106,11 @@
 #' 
 #' @format A matrix with 500 rows and 9 variables:
 #' \describe{
-#'   \item{y11-y13}{Indicators attachted to the first common factor (`eta1`). 
+#'   \item{y11-y13}{Indicators attached to the first common factor (`eta1`). 
 #'                  Population loadings are: 0.7; 0.7; 0.7}
-#'   \item{y21-y23}{Indicators attachted to the second common factor (`eta2`).
+#'   \item{y21-y23}{Indicators attached to the second common factor (`eta2`).
 #'                  Population loadings are: 0.5; 0.7; 0.8}
-#'   \item{y31-y33}{Indicators attachted to the third common factor (`eta3`).
+#'   \item{y31-y33}{Indicators attached to the third common factor (`eta3`).
 #'                  Population loadings are: 0.8; 0.75; 0.7}
 #' }
 #'                  
@@ -137,7 +137,7 @@
 #' a <- csem(threecommonfactors, model_correct)
 #' 
 #' ## The overall model fit is evidently almost perfect:
-#' testOMF(a, .R = 30, .verbose = FALSE) # .R = 30 to speed up the example
+#' testOMF(a, .R = 30) # .R = 30 to speed up the example
 "threecommonfactors"
 
 #' Data: Second order common factor of composites
@@ -230,14 +230,14 @@
 
 #' Data: Anime
 #'
-#' The data set for the example on \href{https://github.com/ISS-Analytics/pls-predict}{github.com/ISS-Analytics/pls-predict}
+#' The data set for the example on \href{https://github.com/ISS-Analytics/pls-predict/}{github.com/ISS-Analytics/pls-predict/}
 #' with irrelevant variables removed.
 #'
 #' @docType data
 #'
 #' @description A data frame with 183 observations and 13 variables. 
 #' 
-#' @source Original source: \href{https://github.com/ISS-Analytics/pls-predict}{github.com/ISS-Analytics/pls-predict}
+#' @source Original source: \href{https://github.com/ISS-Analytics/pls-predict/}{github.com/ISS-Analytics/pls-predict/}
 "Anime"
 
 
@@ -247,7 +247,7 @@
 #' The dataset was initially compiled by \insertCite{Russett1964;textual}{cSEM}, 
 #' discussed and reprinted by \insertCite{Gifi1990;textual}{cSEM}, 
 #' and partially transformed by \insertCite{Tenenhaus2011;textual}{cSEM}.
-#' It is also used in \insertCite{Henseler2020;textual}{cSEM} for demonstration 
+#' It is also used in \insertCite{Henseler2021;textual}{cSEM} for demonstration 
 #' purposes.
 #'
 #' @format A data frame containing the following variables for 47 countries:
@@ -298,14 +298,14 @@
 #' @references
 #'   \insertAllCited{}
 #'     
-#' @source From: \insertCite{Henseler2020;textual}{cSEM}
+#' @source From: \insertCite{Henseler2021;textual}{cSEM}
 "Russett"
 
 
 #' Data: ITFlex
 #'
 #' The dataset was studied by \insertCite{Benitez2018;textual}{cSEM} and is used in 
-#' \insertCite{Henseler2020;textual}{cSEM} for demonstration purposes, see the
+#' \insertCite{Henseler2021;textual}{cSEM} for demonstration purposes, see the
 #' corresponding tutorial. 
 #' All questionnaire items are measured on a 5-point scale.
 #' 
@@ -328,7 +328,7 @@
 #'    \item{\code{ITCONN4}}{There are very few identifiable communications
 #'    bottlenecks within our firm.}
 #'    \item{\code{MOD1}}{Our firm possesses a great speed in developing new
-#'    business applications ormodifying existing applications.}
+#'    business applications or modifying existing applications.}
 #'    \item{\code{MOD2}}{Our corporate database is able to communicate in
 #'    several different protocols.}
 #'    \item{\code{MOD3}}{Reusable software modules are widely used in new
@@ -383,7 +383,7 @@
 #' The data was analysed by \insertCite{Lancelot-Miltgen2016;textual}{cSEM} 
 #' to study young consumers’ adoption intentions of a location tracker technology 
 #' in the light of privacy concerns. It is also used in 
-#' \insertCite{Henseler2020;textual}{cSEM} for demonstration purposes, see the
+#' \insertCite{Henseler2021;textual}{cSEM} for demonstration purposes, see the
 #' corresponding tutorial.
 #' 
 #' @docType data
@@ -430,7 +430,7 @@
 #' image, distribution intensity, advertising spending, and price deals, are
 #' related to the so-called dimensions of brand equity, i.e., perceived brand
 #' quality, brand loyalty, and brand awareness/associations. It is also used in 
-#' \insertCite{Henseler2017;textual}{cSEM} and \insertCite{Henseler2020;textual}{cSEM} 
+#' \insertCite{Henseler2017;textual}{cSEM} and \insertCite{Henseler2021;textual}{cSEM} 
 #' for demonstration purposes, see the corresponding tutorial.
 #' 
 #' @docType data
@@ -439,7 +439,7 @@
 #' 
 #' @examples 
 #' #============================================================================
-#' # Example is taken from Henseler (2020)
+#' # Example is taken from Henseler (2021)
 #' #============================================================================
 #' model_HOC="
 #' # Measurement models FOC
@@ -474,7 +474,7 @@
 #' Data: Switching
 #'
 #' The data contains variables about the consumers’ intention to switch a
-#' service provider. It is also used in \insertCite{Henseler2020;textual}{cSEM} 
+#' service provider. It is also used in \insertCite{Henseler2021;textual}{cSEM} 
 #' for demonstration purposes, see the corresponding tutorial.
 #' 
 #' @docType data
@@ -483,7 +483,7 @@
 #' 
 #' @examples 
 #' #============================================================================
-#' # Example is taken from Henseler (2020)
+#' # Example is taken from Henseler (2021)
 #' #============================================================================
 #' model_Int <-"
 #' # Measurement models
@@ -506,14 +506,60 @@
 "Switching"
 
 
+#' Data: Benitezetal2020
+#'
+#' The simulated data contains variables about the social executive and employee behavior.
+#' Moreover, it contains variables about the social media capability and business performance.
+#' The dataset was used as an illustrative example in \insertCite{Benitez2020;textual}{cSEM}.
+#' 
+#' @docType data
+#'
+#' @description A data frame containing 22 variables with 300 observations. 
+#' 
+#' @examples 
+#' #============================================================================
+#' # Example is taken from Benitez et al. (2020)
+#' #============================================================================
+#' model_Benitez <-"
+#' # Reflective measurement models# Reflective measurement models
+#' SEXB =~ SEXB1 + SEXB2 + SEXB3 +SEXB4
+#' SEMB =~ SEMB1 + SEMB2 + SEMB3 + SEMB4
+#' 
+#' # Composite models
+#' SMC <~ SMC1 + SMC2 + SMC3 + SMC4
+#' BPP <~ BPP1 + BPP2 + BPP3 + BPP4 + BPP5
+#' 
+#' # Control variables
+#' FS<~ FirmSize
+#' Ind <~ Industry1 + Industry2 + Industry3
+#' 
+#' # Structural model
+#' SMC ~ SEXB + SEMB 
+#' BPP ~ SMC + Ind + FS
+#' "
+#' 
+#' out <- csem(.data = Benitezetal2020, .model = model_Benitez,
+#'             .PLS_weight_scheme_inner = 'factorial',
+#'             .tolerance = 1e-06)
+#' 
+#' @references
+#'   \insertAllCited{}
+#'     
+#' @source The dataset is provided as supplementary material by \insertCite{Benitez2020;textual}{cSEM}.  
+"Benitezetal2020"
+
+
+
+
+
 
 #' Data: BergamiBagozzi2000
 #'
 #' The dataset contains 22 variables and originates 
 #' from a larger survey among South Korean employees conducted and
 #' reported by \insertCite{Bergami2000;textual}{cSEM}. It is
-#' also used in  \insertCite{Hwang2014;textual}{cSEM} and 
-#' \insertCite{Henseler2020;textual}{cSEM} 
+#' also used in  \insertCite{Hwang2004;textual}{cSEM} and 
+#' \insertCite{Henseler2021;textual}{cSEM} 
 #' for demonstration purposes, see the corresponding tutorial.
 #' 
 #' @docType data
@@ -522,9 +568,9 @@
 #' 
 #' @examples 
 #' #============================================================================
-#' # Example is taken from Henseler (2020)
+#' # Example is taken from Henseler (2021)
 #' #============================================================================
-#' model_Bergami_Bagozzi="
+#' model_Bergami_Bagozzi_Henseler="
 #' # Measurement models
 #' OrgPres =~ cei1 + cei2 + cei3 + cei4 + cei5 + cei6 + cei7 + cei8 
 #' OrgIden =~ ma1 + ma2 + ma3 + ma4 + ma5 + ma6
@@ -538,10 +584,35 @@
 #' AffJoy  ~ OrgPres + OrgIden + Gender 
 #' "
 #' 
-#' out <- csem(.data = BergamiBagozzi2000, .model = model_Bergami_Bagozzi,
+#' out <- csem(.data = BergamiBagozzi2000, 
+#'             .model = model_Bergami_Bagozzi_Henseler,
 #'             .PLS_weight_scheme_inner = 'factorial',
 #'             .tolerance = 1e-06
 #' )
+#' 
+#' #============================================================================
+#' # Example is taken from Hwang et al. (2004)
+#' #============================================================================ 
+#' 
+#' model_Bergami_Bagozzi_Hwang="
+#' # Measurement models
+#' OrgPres =~ cei1 + cei2 + cei3 + cei4 + cei5 + cei6 + cei7 + cei8 
+#' OrgIden =~ ma1 + ma2 + ma3 + ma4 + ma5 + ma6
+#' AffJoy =~ orgcmt1 + orgcmt2 + orgcmt3 + orgcmt7
+#' AffLove  =~ orgcmt5 + orgcmt6 + orgcmt8
+#' 
+#' # Structural model 
+#' OrgIden ~ OrgPres 
+#' AffLove ~ OrgIden
+#' AffJoy  ~ OrgIden"
+#'
+#'out_Hwang <- csem(.data = BergamiBagozzi2000, 
+#'                  .model = model_Bergami_Bagozzi_Hwang,
+#'                  .approach_weights = "GSCA",
+#'                  .disattenuate = FALSE,
+#'                  .id = "gender",
+#'                  .tolerance = 1e-06) 
+#'
 #' 
 #' @references
 #'   \insertAllCited{}
@@ -602,14 +673,14 @@
 #'
 #' The data comes from a European manufacturer of durable consumer goods and was 
 #' studied by \insertCite{Bliemel2004;textual}{cSEM} who focused on service quality.
-#' It is also used in \insertCite{Henseler2020;textual}{cSEM} 
+#' It is also used in \insertCite{Henseler2021;textual}{cSEM} 
 #' for demonstration purposes, see the corresponding tutorial.
 #' 
 #' @docType data
 #'
 #' @description A data frame containing 23 variables with 411 observations. The original
 #' indicators were measured on a 6-point scale. In this version of the dataset,
-#' the indidcators are scaled to be between 0 and 100. 
+#' the indicators are scaled to be between 0 and 100. 
 #' 
 #' 
 #' @references

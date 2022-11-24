@@ -19,7 +19,7 @@ printSummarizeOverview <- function(.summarize_object) {
     col_align("\n\tNumber of observations", 35), "= ", nrow(x$Arguments$.data),
     col_align("\n\tWeight estimator", 35), "= ", 
     ifelse(x$Arguments$.approach_weights == "PLS-PM" && 
-             x$Type_of_indicator_correlation %in% c("Polychoric", "Polyserial"), 
+             !all(x$Type_of_indicator_correlation == 'Pearson'), 
            "PLS-PM (OrdPLS)", x$Arguments$.approach_weights)
   )
   
@@ -50,11 +50,29 @@ printSummarizeOverview <- function(.summarize_object) {
   cat2(
     col_align("\n\tSecond-order approach", 35), "= ", x$Approach_2ndorder
   )
+  
+  
+  # 
+  
+  
   cat2(
     col_align("\n\tType of path model", 35), "= ", x$Model$model_type,
     col_align("\n\tDisattenuated", 35), "= ", 
     ifelse(x$Arguments$.disattenuate & any(x$Model$construct_type == "Common factor"), 
-           ifelse(x$Arguments$.approach_weights == "PLS-PM", "Yes (PLSc)",
+           ifelse(x$Arguments$.approach_weights == "PLS-PM", 
+                  # If the model contains second-order constructs, the mixed or two-stage approach 
+                  # is applied. Hence, the model is estimated in two stages and 
+                  # consequently .disattenuate is reported for both stages.
+                  # If further approaches are implemented that require only one stage 
+                  # such as the repeated indicators approach we need to do a more detailed check here
+                  if(!is.na(x$Approach_2ndorder)){
+                    paste("First stage:", ifelse(.summarize_object$First_stage$Information$Arguments$.disattenuate==TRUE,
+                                                 "Yes",
+                                                 "No"), "\n",col_align("= Second stage:", 55, "right"), 
+                          ifelse(x$Arguments$.disattenuate == TRUE, "Yes", "No"))
+                  }else{
+                         "Yes (PLSc)"
+           },
                   ifelse(x$Arguments$.approach_weights == "GSCA", "Yes (GSCAm)", "Yes")
            ), "No")
   )
@@ -264,6 +282,13 @@ printSummarizeLoadingsWeights <- function(.summarize_object, .ci_colnames) {
     }
     
     for(i in 1:nrow(x)) {
+      # Note (19.05.2021): infer() also computes standard deviations and confidence
+      # intervals for constant values. Because of floating point impressions
+      # its possible that the sd is not exactly zero in some instances. This
+      # messes up the print method. In this case, set to NA
+      if(isTRUE(all.equal(x[i, "Std_err"], 0))) {
+        x[i, 4:ncol(x)] <- NA
+      }
       cat2(
         "\n  ", 
         col_align(x[i, "Name"], max(l, nchar(.what)) + 2), 
@@ -477,7 +502,7 @@ printTestMGDResults <- function(.x, .approach, .info) {
   
   cat2(
     "\n\nNull hypothesis:\n\n",
-    boxx("H0: Parameter k is equal across two groups.", float = "center")
+    boxx("H0: Parameter k is equal across two groups.", float = "center",width=80)
   )
 
   

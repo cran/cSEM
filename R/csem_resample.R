@@ -40,7 +40,7 @@
 #' as permutation will simply reorder the observations which is usually not 
 #' meaningful. If a list of data is provided 
 #' each list element is assumed to represent the observations belonging to one
-#' group. In this case, data is pooled and group adherence permutated.
+#' group. In this case, data is pooled and group adherence permuted.
 #' 
 #' For cross-validation the number of folds (`k`) defaults to `10`. It may be
 #' changed via the `.cv_folds` argument. Setting `k = 2` (not 1!) splits
@@ -50,7 +50,7 @@
 #'  3.) If `N/k` is not not an integer the last fold will have less observations.
 #' 
 #' Random number generation (RNG) uses the L'Ecuyer-CRMR RGN stream as implemented
-#' in the \href{https://github.com/HenrikBengtsson/future.apply}{future.apply package} 
+#' in the \href{https://github.com/HenrikBengtsson/future.apply/}{future.apply package} 
 #' \insertCite{Bengtsson2018a}{cSEM}.
 #' See [?future_lapply][future.apply::future_lapply] for details. By default
 #' a random seed is chosen.
@@ -106,7 +106,7 @@
 #'   is provided an error is returned as permutation will simply reorder the observations.
 #'   If a grouping variable is specified or a list of data is provided 
 #'   (where each list element is assumed to contain data of one group), 
-#'   group membership is permutated. Hence, the result is a list of length `.R`
+#'   group membership is permuted. Hence, the result is a list of length `.R`
 #'   where each element of that list is a permutation (re)sample.}
 #' \item{Cross-validation}{If a `matrix` or `data.frame` without grouping variable 
 #'   is provided a list of length `.R` is returned. Each list element
@@ -276,6 +276,14 @@ resampleData <- function(
           "The following error occured in the `resampleData()` function:\n",
           "A minimum of 2 cross-validation folds required.")
       }
+      if((ceiling(nrow(data)/.cv_folds)*.cv_folds - nrow(data) >= ceiling(nrow(data)/.cv_folds))){
+        warning2(
+          "The following error occured in the `resampleData()` function:\n",
+          "The number of .cv_folds is not plausible for the given sample size.\n",
+          "Change .cv_folds such that \n",
+          "ceiling(nrow(data)/.cv_folds)*.cv_folds - nrow(data) <= ceiling(nrow(data)/.cv_folds)"
+        )
+      }
       # k-fold cross-validation (=draw k samples of equal size.).
       # Note the last sample may contain less observations if equal sized
       # samples are not possible
@@ -293,10 +301,19 @@ resampleData <- function(
           future.apply::future_lapply(1:.R, function(x) {
             # shuffle data set
             y <- y[sample(1:nrow(y)), ]
-            suppressWarnings(
+            if(ceiling(nrow(data)/.cv_folds)*.cv_folds - nrow(data) < ceiling(nrow(data)/.cv_folds)){
+              
+            #In case that warnings occur, the splitting of the data set might be changed  
+            #suppressWarnings(
               split(as.data.frame(y), rep(1:.cv_folds, 
                                           each = ceiling(nrow(y)/.cv_folds)))
-            )
+            #)
+            }else{
+              #suppressWarnings(
+                split(as.data.frame(y), rep(1:.cv_folds, 
+                                            each = floor(nrow(y)/.cv_folds)))
+              #) 
+            }
           }, future.seed = .seed)
         })
       } else {
@@ -311,10 +328,17 @@ resampleData <- function(
         # shuffle data
         future.apply::future_lapply(1:.R, function(x) {
           data <- data[sample(1:nrow(data)), ]
+          if(ceiling(nrow(data)/.cv_folds)*.cv_folds - nrow(data) < ceiling(nrow(data)/.cv_folds)){
           suppressWarnings(
             split(as.data.frame(data), rep(1:.cv_folds, 
                                            each = ceiling(nrow(data)/.cv_folds)))
           )
+          }else{
+            suppressWarnings(
+              split(as.data.frame(data), rep(1:.cv_folds, 
+                                             each = floor(nrow(data)/.cv_folds)))
+            )
+          }
         }, future.seed = .seed)
       }
     } # END cross-validation
@@ -333,7 +357,7 @@ resampleData <- function(
 #' Given `M` resamples (for bootstrap `M = .R` and for jackknife `M = N`, where
 #' `N` is the number of observations) based on the data used to compute the
 #' [cSEMResults] object provided via `.object`, `resamplecSEMResults()` essentially calls 
-#' [csem()] on each resample using the arguments of the origianl call (ignoring any arguments
+#' [csem()] on each resample using the arguments of the original call (ignoring any arguments
 #' related to resampling) and returns estimates for each of a subset of 
 #' practically useful resampled parameters/statistics computed by [csem()]. 
 #' Currently, the following estimates are computed and returned by default based 
@@ -353,7 +377,7 @@ resampleData <- function(
 #' However, the output will be vectorized (columnwise) in this case. 
 #' See the examples section for details.
 #'
-#' Both resampling the origianl [cSEMResults] object (call it "first resample") 
+#' Both resampling the original [cSEMResults] object (call it "first resample") 
 #' and resampling based on a resampled [cSEMResults] object (call it "second resample") 
 #' are supported. Choices for the former 
 #' are "*bootstrap*" and "*jackknife*". Resampling based on a resample is turned off
@@ -382,30 +406,30 @@ resampleData <- function(
 #' \insertCite{Efron2016;textual}{cSEM} for recommendations.
 #' For jackknife `.R` are `.R2` are ignored. 
 #' 
-#' Resampling may produce inadmissble results (as checked by [verify()]).
+#' Resampling may produce inadmissible results (as checked by [verify()]).
 #' By default these results are dropped however users may choose to `"ignore"`
-#' or `"replace"` inadmissble results in which resampling continious until
-#' the necessary number of admissble results is reached.
+#' or `"replace"` inadmissible results in which resampling continuous until
+#' the necessary number of admissible results is reached.
 #' 
-#' The \pkg{cSEM} package supports (multi)processing via the \href{https://github.com/HenrikBengtsson/future}{future} 
+#' The \pkg{cSEM} package supports (multi)processing via the \href{https://github.com/HenrikBengtsson/future/}{future} 
 #' framework \insertCite{Bengtsson2018}{cSEM}. Users may simply choose an evaluation plan
 #' via `.eval_plan` and the package takes care of all the complicated backend 
 #' issues. Currently, users may choose between standard single-core/single-session
-#'  evaluation (`"sequential"`) and multiprocessing (`"multiprocess"`). The future package
+#'  evaluation (`"sequential"`) and multiprocessing (`"multisession"` or `"multicore"`). The future package
 #' provides other options (e.g., `"cluster"` or `"remote"`), however, they probably 
 #' will not be needed in the context of the \pkg{cSEM} package as simulations usually
-#' do not require high-performance clusters. Depeding on the operating system, the future
+#' do not require high-performance clusters. Depending on the operating system, the future
 #' package will manage to distribute tasks to multiple R sessions (Windows)
 #' or multiple cores. Note that multiprocessing is not necessary always faster
 #' when only a "small" number of replications is required as the overhead of
 #' initializing new sessions or distributing tasks to different cores 
-#' will not immediatley be compensated by the avaiability of multiple sessions/cores.
+#' will not immediately be compensated by the availability of multiple sessions/cores.
 #'
 #' Random number generation (RNG) uses the L'Ecuyer-CRMR RGN stream as implemented in the
-#' \href{https://github.com/HenrikBengtsson/future.apply}{future.apply package} \insertCite{Bengtsson2018a}{cSEM}.
+#' \href{https://github.com/HenrikBengtsson/future.apply/}{future.apply package} \insertCite{Bengtsson2018a}{cSEM}.
 #' It is independent of the evaluation plan. Hence, setting e.g., `.seed = 123` will
 #' generate the same random number and replicates
-#' for both `.eval_plan = "sequential"` and `.eval_plan = "multiprocess"`.
+#' for both `.eval_plan = "sequential"`, `.eval_plan = "multisession"`, and `.eval_plan = "multicore"`.
 #' See [?future_lapply][future.apply::future_lapply] for details.
 #' 
 #' @usage resamplecSEMResults(
@@ -416,7 +440,7 @@ resampleData <- function(
 #'  .R2                    = 199,
 #'  .handle_inadmissibles  = c("drop", "ignore", "replace"),
 #'  .user_funs             = NULL,
-#'  .eval_plan             = c("sequential", "multiprocess"),
+#'  .eval_plan             = c("sequential", "multicore", "multisession"),
 #'  .force                 = FALSE,
 #'  .seed                  = NULL,
 #'  .sign_change_option    = c("none","individual","individual_reestimate",
@@ -440,7 +464,7 @@ resampleData <- function(
 #' row representing one resample for each of the `K` parameters/statistics.
 #' `$Original` contains the original estimates (vectorized by column if the output of 
 #' the user provided function is a matrix.}
-#' \item {`$Information_resamples`: A list containing addtional information.}
+#' \item {`$Information_resamples`: A list containing additional information.}
 #' }
 #' Use `str(<.object>, list.len = 3)` on the resulting object for an overview.
 #' 
@@ -461,7 +485,7 @@ resamplecSEMResults <- function(
   .R2                    = 199,
   .handle_inadmissibles  = c("drop", "ignore", "replace"),
   .user_funs             = NULL,
-  .eval_plan             = c("sequential", "multiprocess"),
+  .eval_plan             = c("sequential", "multicore", "multisession"),
   .force                 = FALSE,
   .seed                  = NULL,
   .sign_change_option    = c("none","individual","individual_reestimate",
@@ -501,7 +525,7 @@ resamplecSEMResults <- function(
   ## Does .object already contain resamples
   if(inherits(.object, "cSEMResults_resampled")) {
     if(.force) {
-      # Delte resamples
+      # Delete resamples
       if(inherits(.object, "cSEMResults_default")) {
         .object$Estimates[["Estimates_resample"]] <- NULL
         .object$Information[["Information_resample"]] <- NULL
@@ -568,7 +592,7 @@ resamplecSEMResults <- function(
     # drawing a random seed out of .Random.seed. If set.seed(seed = NULL) is not
     # called sample(.Random.seed, 1) would result in the same random seed as
     # long as .Random.seed remains unchanged. By resetting the seed we make 
-    # sure that sample draws a different element everytime it is called.
+    # sure that sample draws a different element every time it is called.
     .seed <- sample(.Random.seed, 1)
   }
   

@@ -92,6 +92,7 @@ for(i in c("PLS-PM", "GSCA", "SUMCORR", "MAXVAR", "MINVAR", "GENVAR", "PCA",
   # Note: the tolerance is necessary since Croon correction requires a CFA (i.e. ML estimation)
   # which is only consistent (i.e. will not exactly reproduce the population
   # values for a finite sample size)
+  # Similarly for GSCAm.
   test_that(paste("Weighting approach", i, "yields correct results"), {
     expect_equal(path$Estimate, path$Pop_value, tolerance = 0.01)
     expect_equal(loadings$Estimate, loadings$Pop_value, tolerance = 0.01)
@@ -102,7 +103,7 @@ for(i in c("PLS-PM", "GSCA", "SUMCORR", "MAXVAR", "MINVAR", "GENVAR", "PCA",
                 .path = "../test_results_exportToExcel")
   exportToExcel(summarize(res), .filename = paste0("test_summarize_", i, ".xlsx"),
                 .path = "../test_results_exportToExcel")
-  exportToExcel(predict(res), .filename = paste0("test_predict_", i, ".xlsx"),
+  exportToExcel(predict(res, .handle_inadmissibles = "ignore"), .filename = paste0("test_predict_", i, ".xlsx"),
                 .path = "../test_results_exportToExcel")
   exportToExcel(testOMF(res, .R = 10), .filename = paste0("test_testOMF_", i, ".xlsx"),
                 .path = "../test_results_exportToExcel")

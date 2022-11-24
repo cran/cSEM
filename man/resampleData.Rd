@@ -73,7 +73,7 @@ with each list element containing \code{N} jackknife samples based on the
 is provided an error is returned as permutation will simply reorder the observations.
 If a grouping variable is specified or a list of data is provided
 (where each list element is assumed to contain data of one group),
-group membership is permutated. Hence, the result is a list of length \code{.R}
+group membership is permuted. Hence, the result is a list of length \code{.R}
 where each element of that list is a permutation (re)sample.}
 \item{Cross-validation}{If a \code{matrix} or \code{data.frame} without grouping variable
 is provided a list of length \code{.R} is returned. Each list element
@@ -130,7 +130,7 @@ Choosing \code{resample_method = "permutation"} for ungrouped data causes an err
 as permutation will simply reorder the observations which is usually not
 meaningful. If a list of data is provided
 each list element is assumed to represent the observations belonging to one
-group. In this case, data is pooled and group adherence permutated.
+group. In this case, data is pooled and group adherence permuted.
 
 For cross-validation the number of folds (\code{k}) defaults to \code{10}. It may be
 changed via the \code{.cv_folds} argument. Setting \code{k = 2} (not 1!) splits
@@ -140,7 +140,7 @@ Note: 1.) At least 2 folds required  (\code{k > 1}); 2.) \code{k} can not be lar
 3.) If \code{N/k} is not not an integer the last fold will have less observations.
 
 Random number generation (RNG) uses the L'Ecuyer-CRMR RGN stream as implemented
-in the \href{https://github.com/HenrikBengtsson/future.apply}{future.apply package}
+in the \href{https://github.com/HenrikBengtsson/future.apply/}{future.apply package}
 \insertCite{Bengtsson2018a}{cSEM}.
 See \link[future.apply:future_lapply]{?future_lapply} for details. By default
 a random seed is chosen.

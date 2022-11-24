@@ -38,8 +38,8 @@
 #'   of the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
 #'   article on the
 #'   \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website} for details.
-#'   Alternative but synonemmous names for `"rho_C"` are: 
-#'   composite reliability, construct reliablity, reliability coefficient, 
+#'   Alternative but synonymous names for `"rho_C"` are: 
+#'   composite reliability, construct reliability, reliability coefficient, 
 #'   Joereskog's rho, coefficient omega, or Dillon-Goldstein's rho. 
 #'   For `"rho_C_weighted"`: (Dijkstra-Henselers) rhoA. `rho_C_mm` and `rho_C_weighted_mm`
 #'   have no corresponding names. The former uses unit weights scaled by (w'Sw)^(-1/2) and
@@ -54,7 +54,7 @@
 #'   Calculation is done by [calculateRhoC()].}
 #' \item{Distance measures; "dg", "dl", "dml"}{Measures of the distance
 #'   between the model-implied and the empirical indicator correlation matrix.
-#'   Currently, the geodesic distance (`"dg"`), the squared Euclidian distance
+#'   Currently, the geodesic distance (`"dg"`), the squared Euclidean distance
 #'   (`"dl"`) and the the maximum likelihood-based distance function are implemented 
 #'   (`"dml"`). Calculation is done by [calculateDL()], [calculateDG()], 
 #'   and [calculateDML()].}
@@ -69,7 +69,7 @@
 #'   variable in a structural regression equation. This measure is commonly 
 #'   known as Cohen's f^2. The effect size of the k'th
 #'   independent variable in this case
-#'   is definied as the ratio (R2_included - R2_excluded)/(1 - R2_included), where 
+#'   is defined as the ratio (R2_included - R2_excluded)/(1 - R2_included), where 
 #'   R2_included and R2_excluded are the R squares of the 
 #'   original structural model regression equation (R2_included) and the
 #'   alternative specification with the k'th variable dropped (R2_excluded).
@@ -102,7 +102,19 @@
 #'   measure of model fit in a Chi-square fit test sense. Calculation is done 
 #'   by [calculateGoF()].}
 #' \item{Heterotrait-monotrait ratio of correlations (HTMT); "htmt"}{
-#'   An estimate of the correlation between latent variables. The HTMT is used 
+#'   An estimate of the correlation between latent variables assuming tau equivalent
+#'   measurement models. The HTMT is used 
+#'   to assess convergent and/or discriminant validity of a construct. 
+#'   The HTMT is inherently tied to the common factor model. If the model contains
+#'   less than two constructs modeled as common factors and 
+#'   `.only_common_factors = TRUE`, `NA` is returned.
+#'   It is possible to report the HTMT for constructs modeled as 
+#'   composites by setting `.only_common_factors = FALSE`, however, result should be 
+#'   interpreted with caution as they may not have a conceptual meaning.
+#'   Calculation is done by [calculateHTMT()].}
+#' \item{HTMT2; "htmt2"}{
+#'   An estimate of the correlation between latent variables assuming congeneric
+#'   measurement models. The HTMT2 is used 
 #'   to assess convergent and/or discriminant validity of a construct. 
 #'   The HTMT is inherently tied to the common factor model. If the model contains
 #'   less than two constructs modeled as common factors and 
@@ -148,14 +160,14 @@
 #'   composites by setting `.only_common_factors = FALSE`, however, result should be 
 #'   interpreted with caution as they may not have a conceptual meaning.
 #'   Calculation is done by [calculateRhoT()].}
-#' \item{Variance inflation factors (VIF); "vif"}{An index for the amount of (multi-) 
-#'   collinearity between independent variables of a regression equation. Computed
+#' \item{Variance inflation factors (VIF); "vif"}{An index for the amount of 
+#'   (multi-)collinearity between independent variables of a regression equation. Computed
 #'   for each structural equation. Practically, VIF_k is defined
 #'   as the ratio of 1 over (1 - R2_k) where R2_k is the R squared from a regression
 #'   of the k'th independent variable on all remaining independent variables.
 #'   Calculated when running [csem()].}
 #' \item{Variance inflation factors for PLS-PM mode B (VIF-ModeB); "vifmodeB"}{An index for 
-#'   the amount of (multi-) collinearity between independent variables (indicators) in
+#'   the amount of (multi-)collinearity between independent variables (indicators) in
 #'   mode B regression equations. Computed only if `.object` was obtained using
 #'   `.weight_approach = "PLS-PM"` and at least one mode was mode B. 
 #'   Practically, VIF-ModeB_k is defined as the ratio of 1 over (1 - R2_k) where 
@@ -195,7 +207,7 @@
 #'                            "cfi", "cn", "gfi", "ifi", "nfi", "nnfi", 
 #'                            "reliability",
 #'                            "rmsea", "rms_theta", "srmr",
-#'                            "gof", "htmt", "r2", "r2_adj",
+#'                            "gof", "htmt", "htmt2", "r2", "r2_adj",
 #'                            "rho_T", "rho_T_weighted", "vif", 
 #'                            "vifmodeB"),
 #'   .only_common_factors = TRUE, 
@@ -225,7 +237,7 @@ assess <- function(
                            "cfi", "cn", "gfi", "ifi", "nfi", "nnfi", 
                            "reliability",
                            "rmsea", "rms_theta", "srmr",
-                           "gof", "htmt", "r2", "r2_adj",
+                           "gof", "htmt", "htmt2", "r2", "r2_adj",
                            "rho_T", "rho_T_weighted", "vif", 
                            "vifmodeB"),
   .only_common_factors = TRUE, 
@@ -483,14 +495,25 @@ assess <- function(
     # GoF
     out[["GoF"]]   <- calculateGoF(.object)
   }
-  if(any(.quality_criterion %in% c("all", "htmt"))) {
+  if(any(.quality_criterion %in% c("all", "htmt", "htmt2"))) {
     # HTMT 
     if(inherits(.object, "cSEMResults_default")) {
-      out[["HTMT"]]  <- calculateHTMT(
+      if(any(.quality_criterion %in% c("all", "htmt"))){
+       out[["HTMT"]]  <- calculateHTMT(
         .object,
         .only_common_factors  = .only_common_factors,
+        .type_htmt = "htmt",
         ...
-      )
+       )}
+      
+      if(any(.quality_criterion %in% c("all", "htmt2"))){
+        out[["HTMT2"]]  <- calculateHTMT(
+          .object,
+          .only_common_factors  = .only_common_factors,
+          .type_htmt = "htmt2",
+          ...
+        )}
+    
       # Get argument values
       args_htmt <- list(...)
       if(any(names(args_htmt) == ".inference")) {
@@ -514,7 +537,7 @@ assess <- function(
       if(any(names(args_htmt) == ".type_htmt")) {
         out$Information[[".type_htmt"]] <- args_htmt[[".type_htmt"]]
       } else {
-        # If .type_htmt is not set in the funtion
+        # If .type_htmt is not set in the function
         out$Information[[".type_htmt"]] <- "htmt"
       } 
     } else { # 2nd_order
@@ -527,20 +550,18 @@ assess <- function(
     # R2
     out[["R2"]]  <- x21$R2
     if(inherits(.object, "cSEMResults_2ndorder")) {
-      # Keep only second-order R2s
-      second_order <- x22$Arguments_original$.model$vars_2nd
-      cfs          <- names(which(x22$Arguments_original$.model$construct_type == "Common factor"))
-      out$R2 <- out$R2[intersect(second_order, cfs)]
+      # Remove temp from the R2s of the second stage
+      names(out$R2) <- gsub("_temp", "", names(x21$R2))
+      # out$R2 <- out$R2[intersect(second_order, cfs)]
     }
   }
   if(any(.quality_criterion %in% c("all", "r2_adj")) && !all(x22$Model$structural == 0)) {
     # Adjusted R2
     out[["R2_adj"]]  <- x21$R2adj
     if(inherits(.object, "cSEMResults_2ndorder")) {
-      # Keep only second-order R2s
-      second_order <- x22$Arguments_original$.model$vars_2nd
-      cfs          <- names(which(x22$Arguments_original$.model$construct_type == "Common factor"))
-      out$R2 <- out$R2[intersect(second_order, cfs)]
+      # Remove temp from the R2s of the second stage
+      names(out$R2_adj) <- gsub("_temp", "", names(x21$R2adj))
+
     }
   }
   if(any(.quality_criterion %in% c("all", "reliability"))) {
@@ -609,39 +630,8 @@ assess <- function(
     
   }
   if(any(.quality_criterion %in% c("all", "vifmodeB"))) {
-    # VIFModeB
-    if(inherits(.object, "cSEMResults_default")) {
       out[["VIF_modeB"]] <- calculateVIFModeB(.object)
-    } else {
-      # Combine first and second stage matrix into one
-      nn <- calculateVIFModeB(.object)
-      
-      # If both stages are NA --> return NA
-      # If First_Stage is NA, and Second isnt --> return only Second_stage matrix
-      # If only First_stage is not NA --> return only First_stage matrix
-      # If both are not NA, combine and return combined matrix.
-      out[["VIF_modeB"]] <- if(anyNA(nn$First_stage)) {
-        if(anyNA(nn$Second_stage)) {
-          # 1st is NA and 2nd is NA
-          NA
-        } else {
-          # 1st is NA and 2nd is not NA
-          nn$Second_stage
-        }
-      } else {
-        if(anyNA(nn$Second_stage)) {
-          # 1st is not NA and 2nd is NA
-          nn$First_stage
-        } else {
-          # Non is NA
-          out_temp <- rbind(cbind(nn$First_stage, matrix(0, nrow = nrow(nn$First_stage), ncol = ncol(nn$Second_stage))),
-                cbind(matrix(0, nrow = nrow(nn$Second_stage), ncol = ncol(nn$First_stage)), nn$Second_stage))
-          rownames(out_temp) <- c(rownames(nn$First_stage), rownames(nn$Second_stage))
-          colnames(out_temp) <- c(colnames(nn$First_stage), colnames(nn$Second_stage))
-        }
-      }
-    }
-  }
+   }
   
   out$Information[["All"]] <- FALSE
   

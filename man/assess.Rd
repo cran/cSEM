@@ -14,7 +14,7 @@ assess(
                            "cfi", "cn", "gfi", "ifi", "nfi", "nnfi", 
                            "reliability",
                            "rmsea", "rms_theta", "srmr",
-                           "gof", "htmt", "r2", "r2_adj",
+                           "gof", "htmt", "htmt2", "r2", "r2_adj",
                            "rho_T", "rho_T_weighted", "vif", 
                            "vifmodeB"),
   .only_common_factors = TRUE, 
@@ -30,7 +30,7 @@ the Details section for a list of possible candidates.
 Defaults to "\emph{all}" in which case all possible quality criteria are computed.}
 
 \item{.only_common_factors}{Logical. Should only concepts modeled as common
-factors be included when calculating one of the following quality critera:
+factors be included when calculating one of the following quality criteria:
 AVE, the Fornell-Larcker criterion, HTMT, and all reliability estimates.
 Defaults to \code{TRUE}.}
 
@@ -81,8 +81,8 @@ There are four different versions implemented. See the
 of the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model}
 article on the
 \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website} for details.
-Alternative but synonemmous names for \code{"rho_C"} are:
-composite reliability, construct reliablity, reliability coefficient,
+Alternative but synonymous names for \code{"rho_C"} are:
+composite reliability, construct reliability, reliability coefficient,
 Joereskog's rho, coefficient omega, or Dillon-Goldstein's rho.
 For \code{"rho_C_weighted"}: (Dijkstra-Henselers) rhoA. \code{rho_C_mm} and \code{rho_C_weighted_mm}
 have no corresponding names. The former uses unit weights scaled by (w'Sw)^(-1/2) and
@@ -97,7 +97,7 @@ interpreted with caution as they may not have a conceptual meaning.
 Calculation is done by \code{\link[=calculateRhoC]{calculateRhoC()}}.}
 \item{Distance measures; "dg", "dl", "dml"}{Measures of the distance
 between the model-implied and the empirical indicator correlation matrix.
-Currently, the geodesic distance (\code{"dg"}), the squared Euclidian distance
+Currently, the geodesic distance (\code{"dg"}), the squared Euclidean distance
 (\code{"dl"}) and the the maximum likelihood-based distance function are implemented
 (\code{"dml"}). Calculation is done by \code{\link[=calculateDL]{calculateDL()}}, \code{\link[=calculateDG]{calculateDG()}},
 and \code{\link[=calculateDML]{calculateDML()}}.}
@@ -112,7 +112,7 @@ by \code{\link[=calculateEffects]{calculateEffects()}}.}
 variable in a structural regression equation. This measure is commonly
 known as Cohen's f^2. The effect size of the k'th
 independent variable in this case
-is definied as the ratio (R2_included - R2_excluded)/(1 - R2_included), where
+is defined as the ratio (R2_included - R2_excluded)/(1 - R2_included), where
 R2_included and R2_excluded are the R squares of the
 original structural model regression equation (R2_included) and the
 alternative specification with the k'th variable dropped (R2_excluded).
@@ -145,7 +145,19 @@ Note that, contrary to what the name suggests, the GoF is \strong{not} a
 measure of model fit in a Chi-square fit test sense. Calculation is done
 by \code{\link[=calculateGoF]{calculateGoF()}}.}
 \item{Heterotrait-monotrait ratio of correlations (HTMT); "htmt"}{
-An estimate of the correlation between latent variables. The HTMT is used
+An estimate of the correlation between latent variables assuming tau equivalent
+measurement models. The HTMT is used
+to assess convergent and/or discriminant validity of a construct.
+The HTMT is inherently tied to the common factor model. If the model contains
+less than two constructs modeled as common factors and
+\code{.only_common_factors = TRUE}, \code{NA} is returned.
+It is possible to report the HTMT for constructs modeled as
+composites by setting \code{.only_common_factors = FALSE}, however, result should be
+interpreted with caution as they may not have a conceptual meaning.
+Calculation is done by \code{\link[=calculateHTMT]{calculateHTMT()}}.}
+\item{HTMT2; "htmt2"}{
+An estimate of the correlation between latent variables assuming congeneric
+measurement models. The HTMT2 is used
 to assess convergent and/or discriminant validity of a construct.
 The HTMT is inherently tied to the common factor model. If the model contains
 less than two constructs modeled as common factors and
@@ -191,14 +203,14 @@ reliability estimates for constructs modeled as
 composites by setting \code{.only_common_factors = FALSE}, however, result should be
 interpreted with caution as they may not have a conceptual meaning.
 Calculation is done by \code{\link[=calculateRhoT]{calculateRhoT()}}.}
-\item{Variance inflation factors (VIF); "vif"}{An index for the amount of (multi-)
-collinearity between independent variables of a regression equation. Computed
+\item{Variance inflation factors (VIF); "vif"}{An index for the amount of
+(multi-)collinearity between independent variables of a regression equation. Computed
 for each structural equation. Practically, VIF_k is defined
 as the ratio of 1 over (1 - R2_k) where R2_k is the R squared from a regression
 of the k'th independent variable on all remaining independent variables.
 Calculated when running \code{\link[=csem]{csem()}}.}
 \item{Variance inflation factors for PLS-PM mode B (VIF-ModeB); "vifmodeB"}{An index for
-the amount of (multi-) collinearity between independent variables (indicators) in
+the amount of (multi-)collinearity between independent variables (indicators) in
 mode B regression equations. Computed only if \code{.object} was obtained using
 \code{.weight_approach = "PLS-PM"} and at least one mode was mode B.
 Practically, VIF-ModeB_k is defined as the ratio of 1 over (1 - R2_k) where
@@ -260,7 +272,7 @@ assess(res, .quality_criterion = c("ave", "rho_C", "htmt"))
 res <- csem(threecommonfactors, model, 
             .resample_method = "bootstrap", 
             .R               = 40,
-            .user_funs       = cSEM:::calculateHTMT
+            .user_funs       = cSEM:::calculateSRMR
 )
 
 ## Look at the resamples
@@ -277,13 +289,12 @@ res <- csem(threecommonfactors, model,
             .resample_method = "bootstrap",
             .R               = 40,
             .user_funs       = list(
-              "HTMT" = cSEM:::calculateHTMT,
               "SRMR" = cSEM:::calculateSRMR,
               "RMS_theta" = cSEM:::calculateRMSTheta
             ),
             .tolerance = 1e-04
 )
-res$Estimates$Estimates_resample$Estimates1$HTMT$Resampled[1:4, ]
+res$Estimates$Estimates_resample$Estimates1$SRMR$Resampled[1:4, ]
 res$Estimates$Estimates_resample$Estimates1$RMS_theta$Resampled[1:4]
 }
 }

@@ -24,7 +24,7 @@ One of "\emph{none}" or "\emph{bonferroni}". Defaults to "\emph{none}".}
 
 \item{.approach_cor_robust}{Character string. Approach used to obtain a robust
 indicator correlation matrix. One of: "\emph{none}" in which case the standard
-Bravais-Person correlation is used,
+Bravais-Pearson correlation is used,
 "\emph{spearman}" for the Spearman rank correlation, or
 "\emph{mcd}" via \code{\link[MASS:cov.rob]{MASS::cov.rob()}} for a robust correlation matrix.
 Defaults to "\emph{none}". Note that many postestimation procedures (such as
@@ -41,6 +41,13 @@ Default to "\emph{all}" in which case all approaches are computed (if possible).
 structural relationships. One of: "\emph{sequential}" or "\emph{replace}".
 Defaults to "\emph{sequential}".}
 
+\item{.approach_predict}{Character string. Which approach should be used to
+predictions? One of "\emph{earliest}" and "\emph{direct}". If "\emph{earliest}" predictions
+for indicators associated to endogenous constructs are performed using only
+indicators associated to exogenous constructs. If "\emph{direct}", predictions for
+indicators associated to endogenous constructs are based on indicators associated
+to their direct antecedents. Defaults to "\emph{earliest}".}
+
 \item{.approach_p_adjust}{Character string or a vector of character strings.
 Approach used to adjust the p-value for multiple testing.
 See the \code{methods} argument of \code{\link[stats:p.adjust]{stats::p.adjust()}} for a list of choices and
@@ -49,6 +56,27 @@ their description. Defaults to "\emph{none}".}
 \item{.approach_paths}{Character string. Approach used to estimate the
 structural coefficients. One of: "\emph{OLS}" or "\emph{2SLS}". If "\emph{2SLS}", instruments
 need to be supplied to \code{.instruments}. Defaults to "\emph{OLS}".}
+
+\item{.approach_score_benchmark}{Character string. How should the aggregation
+of the estimates of the truncated normal distribution be done for the
+benchmark predictions? Ignored if not OrdPLS or OrdPLSc is used to obtain benchmark predictions.
+One of "\emph{mean}", "\emph{median}", "\emph{mode}" or "\emph{round}".
+If "\emph{round}", the benchmark predictions are obtained using the traditional prediction
+algorithm for PLS-PM which are rounded for categorical indicators.
+If "\emph{mean}", the mean of the estimated endogenous indicators is calculated.
+If "\emph{median}", the mean of the estimated endogenous indicators is calculated.
+If "\emph{mode}", the maximum empirical density on the intervals defined by the thresholds
+is used.
+If \code{.treat_as_continuous = TRUE} or if all indicators are on a continuous scale,
+\code{.approach_score_benchmark} is ignored. Defaults to "\emph{round}".}
+
+\item{.approach_score_target}{Character string. How should the aggregation of the estimates of
+the truncated normal distribution for the predictions using OrdPLS/OrdPLSc be done?
+One of "\emph{mean}", "\emph{median}" or "\emph{mode}".
+If "\emph{mean}", the mean of the estimated endogenous indicators is calculated.
+If "\emph{median}", the mean of the estimated endogenous indicators is calculated.
+If "\emph{mode}", the maximum empirical density on the intervals defined by the thresholds
+is used. Defaults to "\emph{mean}".}
 
 \item{.approach_weights}{Character string. Approach used to
 obtain composite weights. One of: "\emph{PLS-PM}", "\emph{SUMCORR}", "\emph{MAXVAR}",
@@ -61,7 +89,7 @@ by the user.}
 \item{.attrbutes}{Character string. Variables used as attributes in IPMA.}
 
 \item{.benchmark}{Character string. The procedure to obtain benchmark predictions.
-One of "\emph{lm}", "\emph{unit}", "\emph{PLS-PM}", "\emph{GSCA}", "\emph{PCA}", or "\emph{MAXVAR}".
+One of "\emph{lm}", "\emph{unit}", "\emph{PLS-PM}", "\emph{GSCA}", "\emph{PCA}", "\emph{MAXVAR}", or "\emph{NA}".
 Default to "\emph{lm}".}
 
 \item{.bias_corrected}{Logical. Should the standard and the tStat
@@ -120,7 +148,7 @@ One of \emph{"t"} for Student's t-distribution or \emph{"z"} for the standard no
 Defaults to \emph{"z"}.}
 
 \item{.distance}{Character string. A distance measure. One of: "\emph{geodesic}"
-or "\emph{squared_euclidian}". Defaults to "\emph{geodesic}".}
+or "\emph{squared_euclidean}". Defaults to "\emph{geodesic}".}
 
 \item{.df}{Character string. The method for obtaining the degrees of freedom.
 Choices are "\emph{type1}" and "\emph{type2}". Defaults to "\emph{type1}" .}
@@ -139,7 +167,7 @@ Default to \code{NULL}.}
 be estimated? Defaults to \code{TRUE}.}
 
 \item{.eval_plan}{Character string. The evaluation plan to use. One of
-"\emph{sequential}" or "\emph{multiprocess}". In the latter case
+"\emph{sequential}", "\emph{multicore}", or "\emph{multisession}". In the two latter cases
 all available cores will be used. Defaults to "\emph{sequential}".}
 
 \item{.filename}{Character string. The file name. Defaults to "results.xlsx".}
@@ -197,6 +225,11 @@ for constructs or indicators.}
 
 \item{.matrices}{A list of at least two matrices.}
 
+\item{.metrics}{Character string or a vector of character strings.
+Which prediction metrics should be displayed? One of: "\emph{MAE}", "\emph{RMSE}", "\emph{Q2}",
+"\emph{MER}", "\emph{MAPE}, "\emph{MSE2}", "\emph{U1}", "\emph{U2}", "\emph{UM}", "\emph{UR}", or "\emph{UD}".
+Default to c("\emph{MAE}", "\emph{RMSE}", "\emph{Q2}").}
+
 \item{.model}{A model in \link[lavaan:model.syntax]{lavaan model syntax}
 or a \link{cSEMModel} list.}
 
@@ -227,8 +260,12 @@ be computed? Defaults to \code{FALSE}.}
 
 \item{.object}{An R object of class \link{cSEMResults} resulting from a call to \code{\link[=csem]{csem()}}.}
 
+\item{.object1}{An R object of class \link{cSEMResults} resulting from a call to \code{\link[=csem]{csem()}}.}
+
+\item{.object2}{An R object of class \link{cSEMResults} resulting from a call to \code{\link[=csem]{csem()}}.}
+
 \item{.only_common_factors}{Logical. Should only concepts modeled as common
-factors be included when calculating one of the following quality critera:
+factors be included when calculating one of the following quality criteria:
 AVE, the Fornell-Larcker criterion, HTMT, and all reliability estimates.
 Defaults to \code{TRUE}.}
 
@@ -319,7 +356,7 @@ reliabilities are estimated by \code{csem()}. Currently, only supported for
 from a resample. One of: "\emph{none}", "\emph{bootstrap}" or "\emph{jackknife}". For
 "\emph{bootstrap}" the number of draws is provided via \code{.R2}. Currently,
 resampling from each resample is only required for the studentized confidence
-intervall ("\emph{CI_t_interval}") computed by the \code{\link[=infer]{infer()}} function. Defaults to "\emph{none}".}
+interval ("\emph{CI_t_interval}") computed by the \code{\link[=infer]{infer()}} function. Defaults to "\emph{none}".}
 
 \item{`.resample_object`}{An R object of class \code{cSEMResults_resampled}
 obtained from \code{\link[=resamplecSEMResults]{resamplecSEMResults()}} or by setting \code{.resample_method = "bootstrap"}
@@ -329,7 +366,7 @@ or \code{"jackknife"} when calling \code{\link[=csem]{csem()}}.}
 could potentially be compared and an id column indicating the group adherence
 of each row.}
 
-\item{.r}{Integer. The number of repetitions to use. Defaults to \code{10}.}
+\item{.r}{Integer. The number of repetitions to use. Defaults to \code{1}.}
 
 \item{.R}{Integer. The number of bootstrap replications. Defaults to \code{499}.}
 
@@ -358,6 +395,9 @@ not be altered!}
 be used to handle flipping signs when resampling? One of "\emph{none}","\emph{individual}",
 "\emph{individual_reestimate}", "\emph{construct_reestimate}". Defaults to "\emph{none}".}
 
+\item{.sim_points}{Integer. How many samples from the truncated normal distribution should
+be simulated to estimate the exogenous construct scores? Defaults to "\emph{100}".}
+
 \item{.stage}{Character string. The stage the model is needed for.
 One of "\emph{first}" or "\emph{second}". Defaults to "\emph{first}".}
 
@@ -378,13 +418,21 @@ Defaults to \code{NULL}.}
 \item{.test_data}{A matrix of test data with the same column names as the
 training data.}
 
+\item{.testtype}{Character string. One of "\emph{twosided}" (H1: The models do not
+perform equally in predicting indicators belonging to endogenous constructs)"
+and \emph{onesided}" (H1: Model 1 performs better in predicting indicators belonging}
+
 \item{.tolerance}{Double. The tolerance criterion for convergence.
 Defaults to \code{1e-05}.}
+
+\item{.treat_as_continuous}{Logical. Should the indicators for the benchmark predictions
+be treated as continuous? If \code{TRUE} all indicators are treated as continuous and PLS-PM/PLSc is applied.
+If \code{FALSE} OrdPLS/OrdPLSc is applied. Defaults to \code{TRUE}.}
 
 \item{.type_gfi}{Character string. Which fitting function should the GFI be based
 on? One of \emph{"ML"} for the maximum likelihood fitting function, \emph{"GLS"} for
 the generalized least squares fitting function or \emph{"ULS"} for the
-unweighted least squares fitting function (same as the squared Euclidian distance).
+unweighted least squares fitting function (same as the squared Euclidean distance).
 Defaults to \emph{"ML"}.}
 
 \item{.type_ci}{Character string. Which confidence interval should be calculated?

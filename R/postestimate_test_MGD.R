@@ -128,7 +128,7 @@
 #' does not need to be an estimable model! 
 #' 
 #' Note also that compared to all other functions in \pkg{cSEM} using the argument,
-#'  `.handle_inadmissibles` defaults to `"replace"` to accomdate the Sarstedt et al. (2011) approach.
+#'  `.handle_inadmissibles` defaults to `"replace"` to accommodate the Sarstedt et al. (2011) approach.
 #' 
 #' Argument `.R_permuation` is ignored for the `"Nitzl"` and the `"Keil"` approach. 
 #' `.R_bootstrap` is ignored if  `.object` already contains resamples, 
@@ -149,7 +149,7 @@
 #'                             "Keil", "Nitzl", "Henseler", "CI_para","CI_overlap"),
 #'  .output_type           = c("complete", "structured"),
 #'  .parameters_to_compare = NULL,
-#'  .eval_plan             = c("sequential", "multiprocess"),                           
+#'  .eval_plan             = c("sequential", "multicore", "multisession"),                           
 #'  .handle_inadmissibles  = c("replace", "drop", "ignore"),
 #'  .R_permutation         = 499,
 #'  .R_bootstrap           = 499,
@@ -216,7 +216,7 @@ testMGD <- function(
                             "Keil", "Nitzl","Henseler", "CI_para","CI_overlap"),
  .output_type           = c("complete", "structured"),
  .parameters_to_compare = NULL,
- .eval_plan             = c("sequential", "multiprocess"),
+ .eval_plan             = c("sequential", "multicore", "multisession"),
  .handle_inadmissibles  = c("replace", "drop", "ignore"),
  .R_permutation         = 499,
  .R_bootstrap           = 499,
@@ -351,7 +351,7 @@ testMGD <- function(
     ## Compute test statistic
     temp <- c(
       "dG" = calculateDistance(.matrices = fit, .distance = "geodesic"),
-      "dL" = calculateDistance(.matrices = fit, .distance = "squared_euclidian")
+      "dL" = calculateDistance(.matrices = fit, .distance = "squared_euclidean")
     )
 
     ## Save test statistic
@@ -647,7 +647,7 @@ testMGD <- function(
           ## Compute test statistic
           temp <- c(
             "dG" = calculateDistance(.matrices = fit_temp, .distance = "geodesic"),
-            "dL" = calculateDistance(.matrices = fit_temp, .distance = "squared_euclidian")
+            "dL" = calculateDistance(.matrices = fit_temp, .distance = "squared_euclidean")
           )
           
           ## Save test statistic

@@ -15,7 +15,7 @@ may not be scaled!}
 
 \item{.approach_cor_robust}{Character string. Approach used to obtain a robust
 indicator correlation matrix. One of: "\emph{none}" in which case the standard
-Bravais-Person correlation is used,
+Bravais-Pearson correlation is used,
 "\emph{spearman}" for the Spearman rank correlation, or
 "\emph{mcd}" via \code{\link[MASS:cov.rob]{MASS::cov.rob()}} for a robust correlation matrix.
 Defaults to "\emph{none}". Note that many postestimation procedures (such as
@@ -44,10 +44,10 @@ involved in the computation.
 Bravais-Pearson product-moment correlation is computed (via \code{\link[stats:cor]{stats::cor()}}).}
 \item{\code{Numeric-factor}}{If any of the columns is a factor variable, the
 polyserial correlation \insertCite{Drasgow1988}{cSEM} is computed (via
-\code{\link[polycor:hetcor]{polycor::hetcor()}}).}
+\code{\link[polycor:polyserial]{polycor::polyserial()}}).}
 \item{\code{Factor-factor}}{If both columns are factor variables, the
 polychoric correlation \insertCite{Drasgow1988}{cSEM} is computed (via
-\code{\link[polycor:hetcor]{polycor::hetcor()}}).}
+\code{\link[polycor:polychor]{polycor::polychor()}}).}
 }
 Note: logical input is treated as a 0-1 factor variable.
 

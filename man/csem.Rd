@@ -37,7 +37,7 @@ csem(
 .R2                    = 199,
 .handle_inadmissibles  = c("drop", "ignore", "replace"),
 .user_funs             = NULL,
-.eval_plan             = c("sequential", "multiprocess"),
+.eval_plan             = c("sequential", "multicore", "multisession"),
 .seed                  = NULL,
 .sign_change_option    = c("none", "individual", "individual_reestimate", 
                            "construct_reestimate"),
@@ -61,7 +61,7 @@ second-order constructs. One of: "\emph{2stage}", or "\emph{mixed}". Defaults to
 
 \item{.approach_cor_robust}{Character string. Approach used to obtain a robust
 indicator correlation matrix. One of: "\emph{none}" in which case the standard
-Bravais-Person correlation is used,
+Bravais-Pearson correlation is used,
 "\emph{spearman}" for the Spearman rank correlation, or
 "\emph{mcd}" via \code{\link[MASS:cov.rob]{MASS::cov.rob()}} for a robust correlation matrix.
 Defaults to "\emph{none}". Note that many postestimation procedures (such as
@@ -165,7 +165,7 @@ pairs, where \code{value} is the (scaled or unscaled) starting weight. Defaults 
 from a resample. One of: "\emph{none}", "\emph{bootstrap}" or "\emph{jackknife}". For
 "\emph{bootstrap}" the number of draws is provided via \code{.R2}. Currently,
 resampling from each resample is only required for the studentized confidence
-intervall ("\emph{CI_t_interval}") computed by the \code{\link[=infer]{infer()}} function. Defaults to "\emph{none}".}
+interval ("\emph{CI_t_interval}") computed by the \code{\link[=infer]{infer()}} function. Defaults to "\emph{none}".}
 
 \item{.R}{Integer. The number of bootstrap replications. Defaults to \code{499}.}
 
@@ -190,7 +190,7 @@ vector but matrices are also accepted. However, the output will be
 vectorized (columnwise) in this case. See the examples section for details.}
 
 \item{.eval_plan}{Character string. The evaluation plan to use. One of
-"\emph{sequential}" or "\emph{multiprocess}". In the latter case
+"\emph{sequential}", "\emph{multicore}", or "\emph{multisession}". In the two latter cases
 all available cores will be used. Defaults to "\emph{sequential}".}
 
 \item{.seed}{Integer or \code{NULL}. The random seed to use. Defaults to \code{NULL} in which
@@ -340,11 +340,11 @@ measurement errors behave as if they were Gaussian.
 For details see: \insertCite{Dijkstra2014;textual}{cSEM}.
 }
 
-\subsection{Second-order model}{
-Second-order models are specified using the operators \verb{=~} and \verb{<~}. These
+\subsection{Models containing second-order constructs}{
+Second-order constructs are specified using the operators \verb{=~} and \verb{<~}. These
 operators are usually used with indicators on their right-hand side. For
-second-order models the right-hand side variables are constructs instead.
-If c1, and c2 are constructs forming or measuring a higher order
+second-order constructs the right-hand side variables are constructs instead.
+If c1, and c2 are constructs forming or measuring a higher-order
 construct, a model would look like this:
 \preformatted{my_model <- "
 # Structural model
@@ -358,14 +358,19 @@ SAT  =~ sat1 + sat2
 c1 =~ x11 + x12
 c2 =~ x21 + x22
 
-# Second-order term (in this case a second-order composite build by common
+# Second-order construct (in this case a second-order composite build by common
 # factors)
 VAL <~ c1 + c2
 "
 }
 Currently, two approaches are explicitly implemented:
 \itemize{
-\item{(Default) \code{"2stage"}. The (disjoint) two stage approach as proposed by \insertCite{Agarwal2000;textual}{cSEM}.}
+\item{(Default) \code{"2stage"}. The (disjoint) two-stage approach as proposed by \insertCite{Agarwal2000;textual}{cSEM}.
+Note that by default a correction for attenuation is applied if common factors are
+involved in modeling second-order constructs. For instance, the three-stage approach
+proposed by \insertCite{VanRiel2017;textual}{cSEM} is applied in case of a second-order construct specified as a
+composite of common factors. On the other hand, if no common factors are involved the two-stage approach
+is applied as proposed by \insertCite{Schuberth2020;textual}{cSEM}.}
 \item{\code{"mixed"}. The mixed repeated indicators/two-stage approach as proposed by \insertCite{Ringle2012;textual}{cSEM}.}
 }
 
@@ -397,16 +402,16 @@ and \code{c2} would have to be specified as well.
 }
 
 \subsection{Multigroup analysis}{
-To perform multigroup analysis provide either a list of data sets or one
+To perform a multigroup analysis provide either a list of data sets or one
 data set containing a group-identifier-column whose column
 name must be provided to \code{.id}. Values of this column are taken as levels of a
 factor and are interpreted as group
 identifiers. \code{csem()} will split the data by levels of that column and run
-the estimation for each level separately. Note that the more levels
+the estimation for each level separately. Note, the more levels
 the group-identifier-column has, the more estimation runs are required.
 This can considerably slow down estimation, especially if resampling is
 requested. For the latter it will generally be faster to use
-\code{.eval_plan = "multiprocess"}.
+\code{.eval_plan = "multisession"} or \code{.eval_plan = "multicore"}.
 }
 \subsection{Inference:}{
 Inference is done via resampling. See \code{\link[=resamplecSEMResults]{resamplecSEMResults()}} and \code{\link[=infer]{infer()}} for details.

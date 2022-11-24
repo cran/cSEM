@@ -20,7 +20,7 @@
 #'   One of "*none*" or "*bonferroni*". Defaults to "*none*". 
 #' @param .approach_cor_robust Character string. Approach used to obtain a robust 
 #'   indicator correlation matrix. One of: "*none*" in which case the standard 
-#'   Bravais-Person correlation is used,
+#'   Bravais-Pearson correlation is used,
 #'   "*spearman*" for the Spearman rank correlation, or
 #'   "*mcd*" via \code{\link[MASS:cov.rob]{MASS::cov.rob()}} for a robust correlation matrix. 
 #'   Defaults to "*none*". Note that many postestimation procedures (such as
@@ -34,6 +34,12 @@
 #' @param .approach_nl Character string. Approach used to estimate nonlinear
 #'   structural relationships. One of: "*sequential*" or "*replace*".
 #'   Defaults to "*sequential*".
+#' @param .approach_predict Character string. Which approach should be used to 
+#'  predictions? One of "*earliest*" and "*direct*". If "*earliest*" predictions
+#'  for indicators associated to endogenous constructs are performed using only
+#'  indicators associated to exogenous constructs. If "*direct*", predictions for 
+#'  indicators associated to endogenous constructs are based on indicators associated
+#'  to their direct antecedents. Defaults to "*earliest*". 
 #' @param .approach_p_adjust Character string or a vector of character strings. 
 #' Approach used to adjust the p-value for multiple testing. 
 #' See the `methods` argument of \code{\link[stats:p.adjust]{stats::p.adjust()}} for a list of choices and
@@ -41,6 +47,25 @@
 #' @param .approach_paths Character string. Approach used to estimate the
 #'   structural coefficients. One of: "*OLS*" or "*2SLS*". If "*2SLS*", instruments
 #'   need to be supplied to `.instruments`. Defaults to "*OLS*".
+#' @param .approach_score_benchmark Character string. How should the aggregation
+#'   of the estimates of the truncated normal distribution be done for the 
+#'   benchmark predictions? Ignored if not OrdPLS or OrdPLSc is used to obtain benchmark predictions.
+#'   One of "*mean*", "*median*", "*mode*" or "*round*". 
+#'   If "*round*", the benchmark predictions are obtained using the traditional prediction
+#'   algorithm for PLS-PM which are rounded for categorical indicators.
+#'   If "*mean*", the mean of the estimated endogenous indicators is calculated. 
+#'   If "*median*", the mean of the estimated endogenous indicators is calculated.
+#'   If "*mode*", the maximum empirical density on the intervals defined by the thresholds
+#'   is used.
+#'   If `.treat_as_continuous = TRUE` or if all indicators are on a continuous scale,
+#'   `.approach_score_benchmark` is ignored. Defaults to "*round*".
+#' @param .approach_score_target Character string. How should the aggregation of the estimates of
+#'   the truncated normal distribution for the predictions using OrdPLS/OrdPLSc be done?
+#'   One of "*mean*", "*median*" or "*mode*". 
+#'   If "*mean*", the mean of the estimated endogenous indicators is calculated. 
+#'   If "*median*", the mean of the estimated endogenous indicators is calculated.
+#'   If "*mode*", the maximum empirical density on the intervals defined by the thresholds
+#'   is used. Defaults to "*mean*".
 #' @param .approach_weights Character string. Approach used to
 #'   obtain composite weights. One of: "*PLS-PM*", "*SUMCORR*", "*MAXVAR*",
 #'   "*SSQCORR*", "*MINVAR*", "*GENVAR*", "*GSCA*", "*PCA*", "*unit*", "*bartlett*", 
@@ -50,7 +75,7 @@
 #'   
 #' @param .attrbutes Character string. Variables used as attributes in IPMA.
 #' @param .benchmark Character string. The procedure to obtain benchmark predictions.
-#'   One of "*lm*", "*unit*", "*PLS-PM*", "*GSCA*", "*PCA*", or "*MAXVAR*".
+#'   One of "*lm*", "*unit*", "*PLS-PM*", "*GSCA*", "*PCA*", "*MAXVAR*", or "*NA*".
 #'   Default to "*lm*".
 #' @param .bias_corrected Logical. Should the standard and the tStat
 #'   confidence interval be bias-corrected using the bootstrapped bias estimate? 
@@ -92,7 +117,7 @@
 #'  One of *"t"* for Student's t-distribution or *"z"* for the standard normal distribution.
 #'  Defaults to *"z"*.
 #' @param .distance Character string. A distance measure. One of: "*geodesic*"
-#'   or "*squared_euclidian*". Defaults to "*geodesic*".
+#'   or "*squared_euclidean*". Defaults to "*geodesic*".
 #' @param .df Character string. The method for obtaining the degrees of freedom.
 #'   Choices are "*type1*" and "*type2*". Defaults to "*type1*" .
 #' @param .dominant_indicators A character vector of `"construct_name" = "indicator_name"` pairs, 
@@ -105,7 +130,7 @@
 #' @param .estimate_structural Logical. Should the structural coefficients
 #'   be estimated? Defaults to `TRUE`.
 #' @param .eval_plan Character string. The evaluation plan to use. One of 
-#'   "*sequential*" or "*multiprocess*". In the latter case 
+#'   "*sequential*", "*multicore*", or "*multisession*". In the two latter cases 
 #'   all available cores will be used. Defaults to "*sequential*".
 #' @param .filename Character string. The file name. Defaults to "results.xlsx".
 #' @param .first_resample A list containing the `.R` resamples based on the original
@@ -146,6 +171,10 @@
 #' @param .matrix1 A `matrix` to compare.
 #' @param .matrix2 A `matrix` to compare.
 #' @param .matrices A list of at least two matrices.
+#' @param .metrics Character string or a vector of character strings. 
+#'   Which prediction metrics should be displayed? One of: "*MAE*", "*RMSE*", "*Q2*", 
+#'   "*MER*", "*MAPE*, "*MSE2*", "*U1*", "*U2*", "*UM*", "*UR*", or "*UD*". 
+#'   Default to c("*MAE*", "*RMSE*", "*Q2*").
 #' @param .model A model in [lavaan model syntax][lavaan::model.syntax] 
 #'   or a [cSEMModel] list.
 #' @param .moderator Character string. The name of the moderator variable.
@@ -166,8 +195,10 @@
 #' @param .null_model Logical. Should the degrees of freedom for the null model
 #'   be computed? Defaults to `FALSE`.
 #' @param .object An R object of class [cSEMResults] resulting from a call to [csem()].
+#' @param .object1 An R object of class [cSEMResults] resulting from a call to [csem()].
+#' @param .object2 An R object of class [cSEMResults] resulting from a call to [csem()].
 #' @param .only_common_factors Logical. Should only concepts modeled as common 
-#'   factors be included when calculating one of the following quality critera: 
+#'   factors be included when calculating one of the following quality criteria: 
 #'   AVE, the Fornell-Larcker criterion, HTMT, and all reliability estimates. 
 #'   Defaults to `TRUE`.
 #' @param .only_structural Should the the log-likelihood be based on the 
@@ -237,14 +268,14 @@
 #'   from a resample. One of: "*none*", "*bootstrap*" or "*jackknife*". For 
 #'   "*bootstrap*" the number of draws is provided via `.R2`. Currently, 
 #'   resampling from each resample is only required for the studentized confidence
-#'   intervall ("*CI_t_interval*") computed by the [infer()] function. Defaults to "*none*".  
+#'   interval ("*CI_t_interval*") computed by the [infer()] function. Defaults to "*none*".  
 #' @param `.resample_object` An R object of class `cSEMResults_resampled`
 #'   obtained from [resamplecSEMResults()] or by setting `.resample_method = "bootstrap"`
 #'   or `"jackknife"` when calling [csem()].
 #' @param .resample_sarstedt A matrix containing the parameter estimates that 
 #'   could potentially be compared and an id column indicating the group adherence
 #'   of each row.
-#' @param .r Integer. The number of repetitions to use. Defaults to `10`.
+#' @param .r Integer. The number of repetitions to use. Defaults to `1`.
 #' @param .R Integer. The number of bootstrap replications. Defaults to `499`.
 #' @param .R2 Integer. The number of bootstrap replications to use when 
 #'   resampling from a resample. Defaults to `199`.
@@ -263,6 +294,8 @@
 #' @param .sign_change_option Character string. Which sign change option should 
 #' be used to handle flipping signs when resampling? One of "*none*","*individual*",
 #' "*individual_reestimate*", "*construct_reestimate*". Defaults to "*none*".
+#' @param .sim_points Integer. How many samples from the truncated normal distribution should
+#'   be simulated to estimate the exogenous construct scores? Defaults to "*100*".
 #' @param .stage Character string. The stage the model is needed for.
 #'   One of "*first*" or "*second*". Defaults to "*first*".
 #' @param .standardized Logical. Should standardized scores be returned? Defaults
@@ -277,12 +310,18 @@
 #' @param .terms A vector of construct names to be classified.
 #' @param .test_data A matrix of test data with the same column names as the 
 #'   training data.
+#' @param .testtype Character string. One of "*twosided*" (H1: The models do not 
+#'  perform equally in predicting indicators belonging to endogenous constructs)"
+#'  and *onesided*" (H1: Model 1 performs better in predicting indicators belonging 
 #' @param .tolerance Double. The tolerance criterion for convergence. 
 #'   Defaults to `1e-05`.
+#' @param .treat_as_continuous Logical. Should the indicators for the benchmark predictions
+#'   be treated as continuous? If `TRUE` all indicators are treated as continuous and PLS-PM/PLSc is applied. 
+#'   If `FALSE` OrdPLS/OrdPLSc is applied. Defaults to `TRUE`.
 #' @param .type_gfi Character string. Which fitting function should the GFI be based 
 #'   on? One of *"ML"* for the maximum likelihood fitting function, *"GLS"* for 
 #'   the generalized least squares fitting function or *"ULS"* for the
-#'   unweighted least squares fitting function (same as the squared Euclidian distance). 
+#'   unweighted least squares fitting function (same as the squared Euclidean distance). 
 #'   Defaults to *"ML"*.
 #' @param .type_ci Character string. Which confidence interval should be calculated? 
 #'   For possible choices, see the `.quantity` argument of the [infer()] function.
@@ -405,11 +444,14 @@ args_default <- function(.choices = FALSE) {
     .approach_nl             = c("sequential", "replace"),
     .approach_p_adjust       = "none",
     .approach_paths          = c("OLS", "2SLS"),
+    .approach_predict        = c("earliest", "direct"),
+    .approach_score_benchmark= c("mean", "median", "mode", "round"),
+    .approach_score_target   = c("mean", "median", "mode"),
     .approach_weights        = c("PLS-PM", "SUMCORR", "MAXVAR", "SSQCORR", "MINVAR", "GENVAR",
                                  "GSCA", "PCA", "unit", "bartlett", "regression"), 
     .arguments               = NULL,
     .attributes              = NULL,
-    .benchmark               = c("lm", "unit", "PLS-PM", "GSCA", "PCA", "MAXVAR"),
+    .benchmark               = c("lm", "unit", "PLS-PM", "GSCA", "PCA", "MAXVAR","NA"),
     .bias_corrected          = TRUE,
     .by_equation             = TRUE,
     .C                       = NULL,
@@ -427,13 +469,13 @@ args_default <- function(.choices = FALSE) {
     .dependent               = NULL,
     .disattenuate            = TRUE,
     .dist                    = c("z", "t"),
-    .distance                = c("geodesic", "squared_euclidian"),
+    .distance                = c("geodesic", "squared_euclidean"),
     .df                      = c("type1", "type2"),
     .dominant_indicators     = NULL,
     .E                       = NULL,
     .effect                  = NULL,
     .estimate_structural     = TRUE,
-    .eval_plan               = c("sequential", "multiprocess"),
+    .eval_plan               = c("sequential", "multicore","multisession"),
     .filename                = "results.xlsx",
     .fit_measures            = FALSE,
     .first_resample          = NULL,
@@ -451,6 +493,8 @@ args_default <- function(.choices = FALSE) {
     .matrix1                 = NULL,
     .matrix2                 = NULL,
     .matrices                = NULL,
+    .metrics                 = c("MAE", "RMSE", "Q2", "MER", 
+                                 "MAPE", "MSE2", "U1", "U2" , "UM", "UR", "UD"),
     .model                   = NULL,
     .moderator               = NULL,
     .modes                   = NULL,
@@ -483,17 +527,17 @@ args_default <- function(.choices = FALSE) {
                                  "rho_C", "rho_C_mm", "rho_C_weighted", 
                                  "rho_C_weighted_mm", "dg", "dl", "dml", "df",
                                  "effects", "f2", "fl_criterion", "chi_square", "chi_square_df",
-                                 "cfi", "gfi", "ifi", "nfi", "nnfi", 
+                                 "cfi", "cn", "gfi", "ifi", "nfi", "nnfi", 
                                  "reliability",
                                  "rmsea", "rms_theta", "srmr",
-                                 "gof", "htmt", "r2", "r2_adj",
+                                 "gof", "htmt", "htmt2", "r2", "r2_adj",
                                  "rho_T", "rho_T_weighted", "vif", 
                                  "vifmodeB"),
     
     .quantity                = c("all", "mean", "sd", "bias", "CI_standard_z", "CI_standard_t",
                                  "CI_percentile", "CI_basic", "CI_bc", "CI_bca", "CI_t_intervall"),
     .Q                       = NULL,
-    .r                       = 10,
+    .r                       = 1,
     .R                       = 499,
     .R2                      = 199,
     .R_bootstrap             = 499,
@@ -509,6 +553,7 @@ args_default <- function(.choices = FALSE) {
     .seed                    = NULL,
     .sign_change_option      = c("none", "individual", "individual_reestimate",
                                  "construct_reestimate"),
+    .sim_points              = 100,
     .stage                   = c("first", "second"),
     .standardized            = TRUE,
     .starting_values         = NULL,
@@ -516,6 +561,7 @@ args_default <- function(.choices = FALSE) {
     .terms                   = NULL,
     .test_data               = NULL,
     .tolerance               = 1e-05,
+    .treat_as_continuous     = TRUE,
     .type_gfi                = c("ML", "GLS", "ULS"),
     .type_htmt               = c("htmt", "htmt2"),
     .type_vcv                = c("indicator", "construct"),

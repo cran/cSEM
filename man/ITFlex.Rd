@@ -24,7 +24,7 @@ the central office.}
 \item{\code{ITCONN4}}{There are very few identifiable communications
 bottlenecks within our firm.}
 \item{\code{MOD1}}{Our firm possesses a great speed in developing new
-business applications ormodifying existing applications.}
+business applications or modifying existing applications.}
 \item{\code{MOD2}}{Our corporate database is able to communicate in
 several different protocols.}
 \item{\code{MOD3}}{Reusable software modules are widely used in new
@@ -51,7 +51,7 @@ A data frame containing 16 variables with 100 observations.
 }
 \details{
 The dataset was studied by \insertCite{Benitez2018;textual}{cSEM} and is used in
-\insertCite{Henseler2020;textual}{cSEM} for demonstration purposes, see the
+\insertCite{Henseler2021;textual}{cSEM} for demonstration purposes, see the
 corresponding tutorial.
 All questionnaire items are measured on a 5-point scale.
 }

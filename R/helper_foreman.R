@@ -208,10 +208,10 @@ calculateConstructVCV <- function(
 #'      Bravais-Pearson product-moment correlation is computed (via [stats::cor()][stats::cor()]).}
 #'   \item{`Numeric-factor`}{If any of the columns is a factor variable, the 
 #'     polyserial correlation \insertCite{Drasgow1988}{cSEM} is computed (via 
-#'     [polycor::hetcor()][polycor::hetcor()]).}
+#'     [polycor::polyserial()][polycor::polyserial()]).}
 #'   \item{`Factor-factor`}{If both columns are factor variables, the 
 #'     polychoric correlation \insertCite{Drasgow1988}{cSEM} is computed (via 
-#'     [polycor::hetcor()][polycor::hetcor()]).}
+#'     [polycor::polychor()][polycor::polychor()]).}
 #' }
 #' Note: logical input is treated as a 0-1 factor variable.
 #' 
@@ -245,7 +245,9 @@ calculateIndicatorCor <- function(
   .approach_cor_robust = "none"
 ){
   
-  only_numeric_cols <- all(unlist(lapply(.X_cleaned, is.numeric)))
+  is_numeric_indicator <- lapply(.X_cleaned, is.numeric)
+  
+  only_numeric_cols <- all(unlist(is_numeric_indicator))
   
   if(.approach_cor_robust != "none" && !only_numeric_cols) {
     stop2("Setting `.approach_cor_robust = ", .approach_cor_robust, "` requires all",
@@ -261,13 +263,66 @@ calculateIndicatorCor <- function(
               cor_type <- "Pearson" 
               thres_est = NULL
             } else {
-              # Pd is TRUE by default. See ?hetcor for details
-              temp <- polycor::hetcor(.X_cleaned, std.err = FALSE, pd = TRUE)
-              S    <- temp$correlations
-              cor_type <- unique(c(temp$type))
-              cor_type <- cor_type[which(nchar(cor_type) != 0)] # delete '""'
               
+              # Indicator's correlation matrix
+              S <- matrix(0, ncol = ncol(.X_cleaned), nrow = ncol(.X_cleaned),
+                             dimnames = list(colnames(.X_cleaned), colnames(.X_cleaned)))
+              # matrix containing the type of correlation 
+              cor_type <- S
+              
+              # list for the thresholds
               thres_est <- NULL
+              
+              # temp is used to only calculate the correlations between two 
+              # indicators once (upper triangular matrix)
+              temp <- colnames(.X_cleaned)
+              for(i in colnames(.X_cleaned)){
+                temp <- temp[temp!=i]
+                for(j in temp){
+                  # If both indicators are not continous, the polychoric 
+                  # correlation is calculated
+                  if (is_numeric_indicator[[i]] == FALSE & is_numeric_indicator[[j]] == FALSE){
+                    # The polycor package gives a list with the polychoric correlation and
+                    # the thresholds estimates
+                    cor_temp <- polycor::polychor(.X_cleaned[,i], .X_cleaned[,j], thresholds = TRUE)
+                    S[i,j] <- cor_temp$rho
+                    cor_type[i,j] <- cor_temp$type
+                    thres_est[[i]] <- cor_temp$row.cuts
+                    thres_est[[j]] <- cor_temp$col.cuts
+                    
+                    # If one indicator is continous, the polyserial correlation 
+                    # is calculated.Note: polyserial needs the continous 
+                    # indicator as the first argument.
+                  }else if(is_numeric_indicator[[i]] == FALSE & is_numeric_indicator[[j]] == TRUE){
+                    # The polycor package gives the polyserial correlation and the thresholds
+                    cor_temp <- polycor::polyserial(.X_cleaned[,j], .X_cleaned[,i], thresholds = TRUE)
+                    S[i,j] <- cor_temp$rho
+                    cor_type[i,j] <- cor_temp$type
+                    thres_est[[i]] <- cor_temp$cuts
+                    thres_est[[j]] <- NA
+                  }else if(is_numeric_indicator[[i]] == TRUE & is_numeric_indicator[[j]] == FALSE){
+                    cor_temp <- polycor::polyserial(.X_cleaned[,i], .X_cleaned[,j], thresholds = TRUE)
+                    S[i,j] <- cor_temp$rho
+                    cor_type[i,j] <- cor_temp$type
+                    thres_est[[j]] <- cor_temp$cuts
+                    thres_est[[i]] <- NA
+                    
+                    # If both indicators are continous, the Pearson correlation
+                    # is calculated.
+                  }else{
+                    S[i,j] <- cor(.X_cleaned[,i], .X_cleaned[,j])
+                    cor_type[i,j] <- "Pearson"
+                    thres_est[[i]] <- NA
+                    thres_est[[j]] <- NA
+                  }
+                }
+              }
+              S <- S + t(S)
+              diag(S) <- 1
+              cor_type <- unique(c(cor_type))
+              cor_type <- cor_type[cor_type != "0"]
+              
+            
               
               # The lavCor function does no smoothing in case of empty cells, which creates problems during bootstrap
               # # Use lavCor function from the lavaan package for the calculation of the polychoric and polyserial correlation 
@@ -403,7 +458,7 @@ calculateReliabilities <- function(
       # Note: Only necessary if at least one common factor is in the model
       if(.disattenuate & any(.csem_model$construct_type == "Common factor")) {
         ## "Croon" approach
-        # The Croon reliabilities assume that the scores are built by sumscores 
+        # The Croon reliabilities assume that the scores are built by sum scores 
         # (i.e. unit weights).
         # Moreover, all constructs must be modeled as common factors.
         
@@ -472,6 +527,12 @@ calculateReliabilities <- function(
             .approach_weights)
     }
     
+    
+    # If reliabilities are given by the user, a correction for attenuation is always conducted. 
+    # Consequently, in case of the two/three-stage approach for models containing second-order
+    # constructs always a correction for attenuation is conducted in the second stage 
+    # because in the first stage we calculate the reliabilities and therefore in the 
+    # second stage reliabilities are given which leads to correction for attenuation. 
     if(!.disattenuate) {
       .disattenuate <- TRUE
       warning2("`.disattenuate = FALSE` is set to `TRUE`.")
@@ -556,8 +617,10 @@ calculateReliabilities <- function(
     # } # END if(length(names_cf))
   } # END if(is.null(.reliabilities))
   
-  ## Return Loadings, Reliabilities, and Cross loadings
-  out <- list("Lambda" = Lambda, "Q2" = Q^2, "W" = W)
+  # Return Loadings, Reliabilities, and Cross loadings
+  # Additionally, the disattenuate argument is returned because it can change in
+  # the calculate reliabilities function.
+  out <- list("Lambda" = Lambda, "Q2" = Q^2, "W" = W,".disattenuate" = .disattenuate)
   return(out)
 }
 

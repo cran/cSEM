@@ -37,7 +37,7 @@ print.cSEMTestMICOM <- function(x, ...) {
   cat2(
     "\n\nNull hypothesis:\n\n",
     boxx("H0: Compositional measurement invariance of the constructs.", 
-         float = "center")
+         float = "center",width=80)
   )
   
   ## Test statistic and p-value -----------------------------------------
@@ -133,7 +133,7 @@ print.cSEMTestMICOM <- function(x, ...) {
   #     cat("\n\t")
   #   }  
   #   cat("\n\n")
-  # } # END for i (each group)
+  # } # END for i (each group )
   # 
   ### Step 3 ===================================================================
   cat2(rule2("Step 3 - Equality of the means and variances", type = 3))
@@ -143,7 +143,7 @@ print.cSEMTestMICOM <- function(x, ...) {
     "\n\nNull hypothesis:\n\n",
     boxx(c("1. H0: Difference between group means is zero",
            "2. H0: Log of the ratio of the group variances is zero"),
-         float = "center")
+         float = "center",width=80)
   )
   
   ## Test statistic and critical value -----------------------------------------
