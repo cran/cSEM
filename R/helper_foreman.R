@@ -87,7 +87,7 @@ calculateCorrectionFactors <- function(
         stop2(
           "The following error occured while calculating the correction factor:\n",
           "At least one pair of indicators with uncorrelated measurement errors",
-          " required in each measurment equation.\n", 
+          " required in each measurement equation.\n", 
           "Measurement equation: `", j, "` has none.")
       }
       
@@ -416,8 +416,17 @@ calculateReliabilities <- function(
           
         ## 2. Compute consistent loadings and Q (Composite/proxy-construct correlation)
         ## for constructs modeled as common factors.
+        ## Currently only done for Mode A and Mode B. For unit, modeBNNLS, PCA, it is not clear how the Qs are calculated. 
         for(j in names_cf) {
+          
+          if(modes[j]=='modeA'){
           Lambda[j, ] <- correction_factors[j] * W[j, ]
+          }
+          
+          if(modes[j]=='modeB'){
+            Lambda[j, ] <- correction_factors[j] * Lambda[j, ]
+          }
+          
           Q[j]        <- c(W[j, ] %*% Lambda[j, ])
         }
       } 

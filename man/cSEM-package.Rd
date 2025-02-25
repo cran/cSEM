@@ -18,9 +18,9 @@ procedures (e.g., assess the model fit, compute direct, indirect and total effec
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/M-E-Rademaker/cSEM/}
-  \item \url{https://m-e-rademaker.github.io/cSEM/}
-  \item Report bugs at \url{https://github.com/M-E-Rademaker/cSEM/issues/}
+  \item \url{https://github.com/FloSchuberth/cSEM/}
+  \item \url{https://floschuberth.github.io/cSEM/}
+  \item Report bugs at \url{https://github.com/FloSchuberth/cSEM/issues/}
 }
 
 }
@@ -36,6 +36,7 @@ Other contributors:
 \itemize{
   \item Tamara Schamberger \email{tamara.schamberger@uni-wuerzburg.de} (\href{https://orcid.org/0000-0002-7845-784X}{ORCID}) [contributor]
   \item Michael Klesel (\href{https://orcid.org/0000-0002-2884-1819}{ORCID}) [contributor]
+  \item Huu Phuc Nguyen (\href{https://orcid.org/0009-0000-9344-7132}{ORCID}) [contributor]
   \item Theo K. Dijkstra [contributor]
   \item Jörg Henseler (\href{https://orcid.org/0000-0002-9736-3048}{ORCID}) [contributor]
 }

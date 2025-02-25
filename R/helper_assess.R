@@ -74,6 +74,10 @@ calculateModelSelectionCriteria <- function(
     args <- .object$Information$Arguments
     args$.model$structural[lower.tri(args$.model$structural)] <- 1
     
+    # set the .id argument to NULL; this is necessary as otherwise csem treats it as multigroup object,
+    # which produces errors.  
+    args$.id <- NULL
+    
     out_saturated <- do.call(csem, args)
     
     MSE <- (1 - out_saturated$Estimates$R2)[names(x1$R2)]
@@ -211,7 +215,7 @@ calculateModelSelectionCriteria <- function(
 #'
 #' Calculate the average variance extracted (AVE) as proposed by 
 #' \insertCite{Fornell1981;textual}{cSEM}. For details see the
-#' \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#ave}{cSEM website} 
+#' \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html#ave}{cSEM website} 
 #'
 #' The AVE is inherently tied to the common factor model. It is therefore 
 #' unclear how to meaningfully interpret the AVE in the context of a 
@@ -253,10 +257,10 @@ calculateAVE <- function(
     
     out <- lapply(.object, calculateAVE, .only_common_factors = .only_common_factors)
     out$Second_stage <- out$Second_stage[c_names2]
-    out <- if(is.na(out$Second_stage)) {
+    out <- if(all(is.na(out$Second_stage))) {
       out$First_stage
     } else {
-      out <- c(out$First_stage, out$Second_stage)
+      out <- c(out$First_stage, out$Second_stage[!is.na(out$Second_stage)])
     }
     return(out)
     
@@ -282,7 +286,7 @@ calculateAVE <- function(
   
   names(AVEs) <- c_names
   
-  # By default AVE's for composites are not returned
+  # By default AVEs for composites are not returned
   if(.only_common_factors){
     ## Extract construct type
     con_types <-.object$Information$Model$construct_type
@@ -303,7 +307,7 @@ calculateAVE <- function(
 #' postulated models via the estimation of a composite model,
 #' the computation of the degrees of freedom depends on the postulated model.
 #' 
-#' See: \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{cSEM website} 
+#' See: \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html}{cSEM website} 
 #' for details on how the degrees of freedom are calculated.
 #' 
 #' To compute the degrees of freedom of the null model use `.null_model = TRUE`.
@@ -560,7 +564,7 @@ calculateDf <- function(
 #'   )
 #'
 #' @return A matrix with the squared construct correlations on the off-diagonal and 
-#' the AVE's on the main diagonal.
+#' the AVEs on the main diagonal.
 #'   
 #' @inheritParams csem_arguments
 #' @param ... Ignored.
@@ -640,23 +644,29 @@ calculateGoF <- function(
     out <- lapply(.object, calculateGoF)
     return(out)
   } else if(inherits(.object, "cSEMResults_default")) {
+    # Only select constructs with more than one indicator
+    NoSingleConstruct <- rownames(.object$Information$Model$measurement)[rowSums(.object$Information$Model$measurement) != 1]
+    
     ## Get relevant quantities
-    Lambda    <- .object$Estimates$Loading_estimates
+    Lambda    <- .object$Estimates$Loading_estimates[NoSingleConstruct,,drop=FALSE]
     R2        <- .object$Estimates$R2
     
     # Select only non-zero loadings
     L  <- Lambda[Lambda != 0]
     
   } else if(inherits(.object, "cSEMResults_2ndorder")) {
-    c_names2  <- .object$Second_stage$Information$Arguments_original$.model$vars_2nd
+
+    ## Extract loadings for constructs with more than one indicator
+    # First stage
+    NoSingleConstruct <- rownames(.object$First_stage$Information$Model$measurement)[rowSums(.object$First_stage$Information$Model$measurement) != 1] 
+    Lambda   <- .object$First_stage$Estimates$Loading_estimates[NoSingleConstruct,,drop=FALSE]
     
-    ## Extract loadings
-    Lambda   <- .object$First_stage$Estimates$Loading_estimates
-    Lambda2  <- .object$Second_stage$Estimates$Loading_estimates 
+    NoSingleConstruct2 <- rownames(.object$Second_stage$Information$Model$measurement)[rowSums(.object$Second_stage$Information$Model$measurement) != 1]
+    
+    # In this way the single-indicator constructs from the first stage are also not considered in the second stage
+    Lambda2  <- .object$Second_stage$Estimates$Loading_estimates[NoSingleConstruct2,,drop=FALSE] 
     R2       <- .object$Second_stage$Estimates$R2
     
-    Lambda2   <- Lambda2[c_names2, ]
-
     L  <- Lambda[Lambda != 0]
     L2 <- Lambda2[Lambda2 != 0]
     
@@ -668,21 +678,133 @@ calculateGoF <- function(
     )
   }
   
+  # Warning in case of single-indicator constructs only.
+  if(length(L)==0){
+    warning2("This warning occured in the `calculateGoF()` function.\n",
+             "Model consists of single-indicator constructs only.\n")
+  }
+
   # The GoF is defined as the sqrt of the mean of the R^2s of the structural model 
   # times the variance in the indicators that is explained by the construct (lambda^2).
-
+    
   gof <- sqrt(mean(L^2) * mean(R2))
   
   return(gof)
 }
 
 
+#' Relative Goodness of Fit (relative GoF)
+#'
+#' Calculate the Relative Goodness of Fit (GoF) proposed by \insertCite{Vinzi2010a;textual}{cSEM}. 
+#' Note that, contrary to what the name suggests, the Relative GoF is **not** a 
+#' measure of model fit in the sense of SEM. See e.g. \insertCite{Henseler2012a;textual}{cSEM}
+#' for a discussion.
+#' 
+#' 
+#' @usage calculateRelativeGoF(
+#'  .object              = NULL
+#' )
+#'
+#' @return A single numeric value.
+#'   
+#' @inheritParams csem_arguments
+#'
+#' @seealso [assess()], [cSEMResults]
+#'
+#' @references 
+#' \insertAllCited{}
+#' @export
+
+calculateRelativeGoF <- function(
+    .object              = NULL
+){
+  
+  if(inherits(.object, "cSEMResults_multi")) {
+    out <- lapply(.object, calculateGoF)
+    return(out)
+  } else if(inherits(.object, "cSEMResults_default")) {
+    ## Get relevant quantities
+    Lambda    <- .object$Estimates$Loading_estimates
+    R2        <- .object$Estimates$R2
+    S <- .object$Estimates$Indicator_VCV
+    
+    structural <- .object$Information$Model$structural
+    measurement <- .object$Information$Model$measurement
+    construct_names <- rownames(measurement)
+    
+    cons_endo <- .object$Information$Model$cons_endo
+    
+    constructs_with_more_than_one_indicator <- construct_names[rowSums(measurement)!=1]
+    
+    if(length(constructs_with_more_than_one_indicator)!=0){
+    T1 <- sapply(constructs_with_more_than_one_indicator, function(x){
+      
+      indicator_names <- colnames(measurement[x,measurement[x,]!=0,drop=FALSE])
+    
+      numerator <- Lambda[x,Lambda[x,]!=0,drop=FALSE]^2
+      
+      # calculate the largest Eigenvalue
+      denominator <- eigen(S[indicator_names,indicator_names])$values[1]
+      
+      numerator/denominator
+    })
+    
+    T1 <- mean(unlist(T1))
+    
+
+    T2 <- sapply(cons_endo,function(x){
+      
+      indicators_dep <- colnames(measurement[x,measurement[x,]!=0,drop=FALSE])
+      cons_indep <- colnames(structural[x,structural[x,]!=0,drop=FALSE])
+      indicators_ind <-colnames(measurement[cons_indep,colSums(measurement[cons_indep,,drop=FALSE])!=0,drop=FALSE])
+      
+      S_depdep <- S[indicators_dep,indicators_dep,drop=FALSE]
+      S_indind <- S[indicators_ind,indicators_ind,drop=FALSE]
+      S_depind <- S[indicators_dep,indicators_ind,drop=FALSE]
+      S_inddep <- t(S_depind)
+      
+      rho2 <- eigen(solve(S_depdep)%*%S_depind%*%solve(S_indind)%*%S_inddep)$values[1]
+      
+      
+      R2[x]/rho2
+    })
+    
+    T2 <- mean(T2)
+    
+    relGoF <- sqrt(T1*T2)
+    } else {
+      
+      warning2("This warning occured in the `calculateRelativeGoF()` function.\n",
+               "Model consists of single-indicator constructs only.\n")
+      
+      relGoF <- NA
+    }
+    return(relGoF)
+
+    
+  } else if(inherits(.object, "cSEMResults_2ndorder")) {
+    stop2(
+      "The following error occured in the calculateRelativeGoF() function:\n",
+      "For models contianing second-order constructs, the relative GoF is not implemented."
+    )
+  } else {
+    stop2(
+      "The following error occured in the calculateRelativeGoF() function:\n",
+      "`.object` must be of class `cSEMResults`."
+    )
+  }
+
+
+}
+
+
+
 
 #' Reliability
 #'
 #' Compute several reliability estimates. See the 
-#' \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#reliability}{Reliability}
-#' section of the \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website}
+#' \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html#reliability}{Reliability}
+#' section of the \href{https://floschuberth.github.io/cSEM/index.html}{cSEM website}
 #' for details.
 #' 
 #' Since reliability is defined with respect to a classical true score measurement
@@ -699,7 +821,7 @@ calculateGoF <- function(
 #' For the tau-equivalent reliability ("`rho_T`" or "`cronbachs_alpha`") a closed-form 
 #' confidence interval may be computed \insertCite{Trinchera2018}{cSEM} by setting
 #' `.closed_form_ci = TRUE` (default is `FALSE`). If `.alpha` is a vector
-#' several CI's are returned.
+#' several CIs are returned.
 #'
 #' @return For `calculateRhoC()` and `calculateRhoT()` (if `.output_type = "vector"`) 
 #'   a named numeric vector containing the reliability estimates.
@@ -754,10 +876,10 @@ calculateRhoC <- function(
                   .weighted            = .weighted)
     
     out$Second_stage <- out$Second_stage[c_names2]
-    out <- if(is.na(out$Second_stage)) {
+    out <- if(all(is.na(out$Second_stage))) {
       out$First_stage
     } else {
-      c(out$First_stage, out$Second_stage)
+      c(out$First_stage, out$Second_stage[!is.na(out$Second_stage)])
     }
     return(out)
     
@@ -869,10 +991,10 @@ calculateRhoT <- function(
     )
     if(.output_type == "vector") {
       out$Second_stage <- out$Second_stage[c_names2]
-      out <- if(is.na(out$Second_stage)) {
+      out <- if(all(is.na(out$Second_stage))) {
         out$First_stage
       } else {
-        c(out$First_stage, out$Second_stage)
+        c(out$First_stage, out$Second_stage[!is.na(out$Second_stage)])
       }
     } else {
       out$Second_stage <- out$Second_stage[out$Second_stage$Construct %in% c_names2, ]
@@ -924,7 +1046,7 @@ calculateRhoT <- function(
       # Calculation of the CIs are based on Trinchera et al. (2018).
       # The code for the calculation of the CIs is addpated from the paper.
 
-      ## If CI's are computed:
+      ## If CIs are computed:
       # Calculation of the CIs are based on Trinchera et al. (2018).
       # In the paper, the CI was proposed and studied using Monte Carlo simulation
       # assuming scores are build as sum scores. Therefore a warning is
@@ -1505,8 +1627,8 @@ calculateDML <- function(
 #' 
 #' Calculate fit measures.
 #' 
-#' See the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#fit_indices}{Fit indices}
-#' section of the \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website}
+#' See the \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html#fit_indices}{Fit indices}
+#' section of the \href{https://floschuberth.github.io/cSEM/index.html}{cSEM website}
 #' for details on the implementation.
 #' 
 #' @return A single numeric value.
@@ -1889,7 +2011,7 @@ calculateSRMR <- function(
 
 
 
-#' Calculate Cohens f^2
+#' Calculate Cohen's f^2
 #'
 #' Calculate the effect size for regression analysis \insertCite{Cohen1992}{cSEM}
 #' known as Cohen's f^2. 

@@ -6,8 +6,8 @@
 #' models using a composite-based approach. In \pkg{cSEM} 
 #' any method or approach that involves linear compounds (scores/proxies/composites)
 #' of observables (indicators/items/manifest variables) is defined as composite-based.
-#' See the \href{https://m-e-rademaker.github.io/cSEM/articles/cSEM.html}{Get started} 
-#' section of the \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website}
+#' See the \href{https://floschuberth.github.io/cSEM/articles/cSEM.html}{Get started} 
+#' section of the \href{https://floschuberth.github.io/cSEM/index.html}{cSEM website}
 #' for a general introduction to composite-based SEM and \pkg{cSEM}.
 #'
 #' `csem()` estimates linear, nonlinear, hierarchical  or multigroup structural 
@@ -55,7 +55,7 @@
 #'   `"SUMCORR"`, `"MAXVAR"`, `"SSQCORR"`, `"MINVAR"`, `"GENVAR"`.}
 #' \item{Principal component analysis (`"PCA"`)}
 #' \item{Factor score regression using sum scores (`"unit"`), 
-#'    regression (`"regression"`) or bartlett scores (`"bartlett"`)}
+#'    regression (`"regression"`) or Bartlett scores (`"bartlett"`)}
 #' }
 #' 
 #' It is possible to supply starting values for the weighting algorithm 
@@ -266,6 +266,7 @@
 #'   fit measures, HTMT, R2 etc.}
 #' \item{[infer()]}{Calculate common inferential quantities, e.g., standard errors, 
 #'   confidence intervals.}
+#' \item{[plot()]}{Creates a plot of the model. For the help file see [plot.cSEMResults_default()].}  
 #' \item{[predict()]}{Predict endogenous indicator scores and compute common prediction metrics.}
 #' \item{[summarize()]}{Summarize the results. Mainly called for its side-effect the print method.}
 #' \item{[verify()]}{Verify/Check admissibility of the estimates.}
@@ -274,10 +275,11 @@
 #' Tests are performed using the test-family of functions. Currently the following
 #' tests are implemented:
 #' \describe{
+#' \item{[testCVPAT()]}{Cross-validated predictive ability test proposed by \insertCite{Liengaard2021;textual}{cSEM}}
 #' \item{[testOMF()]}{Bootstrap-based test for overall model fit based on 
-#'   \insertCite{Beran1985;textual}{cSEM}}
+#'   \insertCite{Beran1985;textual}{cSEM}.}
 #' \item{[testMICOM()]}{Permutation-based test for measurement invariance of composites
-#' proposed by \insertCite{Henseler2016;textual}{cSEM}}
+#' proposed by \insertCite{Henseler2016;textual}{cSEM}.}
 #' \item{[testMGD()]}{Several (mainly) permutation-based tests for multi-group comparisons.}
 #' \item{[testHausman()]}{Regression-based Hausman test to test for endogeneity.}
 #' }
@@ -285,7 +287,7 @@
 #' Other miscellaneous postestimation functions belong do the do-family of functions.
 #' Currently three do functions are implemented:
 #' \describe{
-#' \item{[doIPMA()]}{Performs an importance-performance matrix analyis (IPMA).}
+#' \item{[doIPMA()]}{Performs an importance-performance matrix analysis (IPMA).}
 #' \item{[doNonlinearEffectsAnalysis()]}{Perform a nonlinear effects analysis as
 #'   described in e.g.,
 #'   \insertCite{Spiller2013;textual}{cSEM}}
@@ -297,7 +299,7 @@
 #'   \insertAllCited{}
 #'
 #' @seealso [args_default()], [cSEMArguments], [cSEMResults], [foreman()], [resamplecSEMResults()],
-#'   [assess()], [infer()], [predict()], [summarize()], [verify()], [testOMF()],
+#'   [assess()], [infer()], [plot.cSEMResults_default()], [predict()], [summarize()], [verify()], [testCVPAT()], [testOMF()],
 #'   [testMGD()], [testMICOM()], [testHausman()]
 #' 
 #' @example inst/examples/example_csem.R

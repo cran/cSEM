@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function(e) {
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -44,7 +44,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -159,7 +159,7 @@ model</h1>
 <h3 class="subtitle project-tagline">Using the <code>assess()</code>
 function</h3>
 <h4 class="author project-author">Manuel Rademaker</h4>
-<h4 class="date project-date">Last edited: 2022-11-24</h4>
+<h4 class="date project-date">Last edited: 2025-02-25</h4>
 </section>
 
 
@@ -297,22 +297,22 @@ Formulae</a> section.</p>
 </div>
 <div id="syntax-options" class="section level1">
 <h1>Syntax &amp; Options</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assess</span>(</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">.object              =</span> <span class="cn">NULL</span>, </span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">.only_common_factors =</span> <span class="cn">TRUE</span>, </span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">.quality_criterion   =</span> <span class="fu">c</span>(<span class="st">&quot;all&quot;</span>, <span class="st">&quot;aic&quot;</span>, <span class="st">&quot;aicc&quot;</span>, <span class="st">&quot;aicu&quot;</span>, <span class="st">&quot;bic&quot;</span>, <span class="st">&quot;fpe&quot;</span>, <span class="st">&quot;gm&quot;</span>, <span class="st">&quot;hq&quot;</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>                           <span class="st">&quot;hqc&quot;</span>, <span class="st">&quot;mallows_cp&quot;</span>, <span class="st">&quot;ave&quot;</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                           <span class="st">&quot;rho_C&quot;</span>, <span class="st">&quot;rho_C_mm&quot;</span>, <span class="st">&quot;rho_C_weighted&quot;</span>, </span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                           <span class="st">&quot;rho_C_weighted_mm&quot;</span>, <span class="st">&quot;dg&quot;</span>, <span class="st">&quot;dl&quot;</span>, <span class="st">&quot;dml&quot;</span>, <span class="st">&quot;df&quot;</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                           <span class="st">&quot;effects&quot;</span>, <span class="st">&quot;f2&quot;</span>, <span class="st">&quot;fl_criterion&quot;</span>, <span class="st">&quot;chi_square&quot;</span>, <span class="st">&quot;chi_square_df&quot;</span>,</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                           <span class="st">&quot;cfi&quot;</span>, <span class="st">&quot;gfi&quot;</span>, <span class="st">&quot;ifi&quot;</span>, <span class="st">&quot;nfi&quot;</span>, <span class="st">&quot;nnfi&quot;</span>, </span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                           <span class="st">&quot;reliability&quot;</span>,</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                           <span class="st">&quot;rmsea&quot;</span>, <span class="st">&quot;rms_theta&quot;</span>, <span class="st">&quot;srmr&quot;</span>,</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                           <span class="st">&quot;gof&quot;</span>, <span class="st">&quot;htmt&quot;</span>, <span class="st">&quot;r2&quot;</span>, <span class="st">&quot;r2_adj&quot;</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                           <span class="st">&quot;rho_T&quot;</span>, <span class="st">&quot;rho_T_weighted&quot;</span>, <span class="st">&quot;vif&quot;</span>, </span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                           <span class="st">&quot;vifmodeB&quot;</span>),</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  ...</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">assess</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="at">.object              =</span> <span class="cn">NULL</span>, </span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="at">.only_common_factors =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="at">.quality_criterion   =</span> <span class="fu">c</span>(<span class="st">&quot;all&quot;</span>, <span class="st">&quot;aic&quot;</span>, <span class="st">&quot;aicc&quot;</span>, <span class="st">&quot;aicu&quot;</span>, <span class="st">&quot;bic&quot;</span>, <span class="st">&quot;fpe&quot;</span>, <span class="st">&quot;gm&quot;</span>, <span class="st">&quot;hq&quot;</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>                           <span class="st">&quot;hqc&quot;</span>, <span class="st">&quot;mallows_cp&quot;</span>, <span class="st">&quot;ave&quot;</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>                           <span class="st">&quot;rho_C&quot;</span>, <span class="st">&quot;rho_C_mm&quot;</span>, <span class="st">&quot;rho_C_weighted&quot;</span>, </span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>                           <span class="st">&quot;rho_C_weighted_mm&quot;</span>, <span class="st">&quot;dg&quot;</span>, <span class="st">&quot;dl&quot;</span>, <span class="st">&quot;dml&quot;</span>, <span class="st">&quot;df&quot;</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>                           <span class="st">&quot;effects&quot;</span>, <span class="st">&quot;f2&quot;</span>, <span class="st">&quot;fl_criterion&quot;</span>, <span class="st">&quot;chi_square&quot;</span>, <span class="st">&quot;chi_square_df&quot;</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>                           <span class="st">&quot;cfi&quot;</span>, <span class="st">&quot;gfi&quot;</span>, <span class="st">&quot;ifi&quot;</span>, <span class="st">&quot;nfi&quot;</span>, <span class="st">&quot;nnfi&quot;</span>, </span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>                           <span class="st">&quot;reliability&quot;</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>                           <span class="st">&quot;rmsea&quot;</span>, <span class="st">&quot;rms_theta&quot;</span>, <span class="st">&quot;srmr&quot;</span>,</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>                           <span class="st">&quot;gof&quot;</span>, <span class="st">&quot;htmt&quot;</span>, <span class="st">&quot;r2&quot;</span>, <span class="st">&quot;r2_adj&quot;</span>,</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>                           <span class="st">&quot;rho_T&quot;</span>, <span class="st">&quot;rho_T_weighted&quot;</span>, <span class="st">&quot;vif&quot;</span>, </span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>                           <span class="st">&quot;vifmodeB&quot;</span>),</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>  ...</span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>)</span></code></pre></div>
 <dl>
 <dt><code>.object</code></dt>
 <dd>
@@ -336,7 +336,7 @@ to <code>TRUE</code>.</p>
 <dt><code>...</code></dt>
 <dd>
 <p>Further arguments passed to functions called by
-<code>assess()</code>. See <a href="https://m-e-rademaker.github.io/cSEM/reference/args_assess_dotdotdot.html">args_assess_dotdotdot</a>
+<code>assess()</code>. See <a href="https://floschuberth.github.io/cSEM/reference/args_assess_dotdotdot.html">args_assess_dotdotdot</a>
 for a complete list of available arguments.</p>
 </dd>
 </dl>
@@ -401,8 +401,8 @@ quantities such as the AVE or the congeneric reliability <span class="math inlin
 <div id="methods" class="section level1">
 <h1>Methods &amp; Formulae</h1>
 <p>This section provides technical details and relevant formulae. For
-the relevant notation and terminology used in this section, see the <a href="https://m-e-rademaker.github.io/cSEM/articles/Notation.html">Notation</a>
-and the <a href="https://m-e-rademaker.github.io/cSEM/articles/Terminology.html">Termionology</a>
+the relevant notation and terminology used in this section, see the <a href="https://floschuberth.github.io/cSEM/articles/Notation.html">Notation</a>
+and the <a href="https://floschuberth.github.io/cSEM/articles/Terminology.html">Termionology</a>
 help files.</p>
 <div id="ave" class="section level2">
 <h2>Average Variance Extracted (AVE)</h2>
@@ -450,7 +450,7 @@ meaning.</p>
 </div>
 <div id="formulae" class="section level3">
 <h3>Formulae</h3>
-<p>Using the results and notation derived and defined in the <a href="https://m-e-rademaker.github.io/cSEM/articles/Notation.html">Notation</a>
+<p>Using the results and notation derived and defined in the <a href="https://floschuberth.github.io/cSEM/articles/Notation.html">Notation</a>
 help file, the AVE for a generic construct is: <span class="math display">\[ AVE = \frac{\text{Sum indicator true score
 variances}}{\text{Sum indicator variances}} =  \frac{\sum
 Var(\eta_k)}{\sum Var(x_k)} = \frac{\sum\lambda^2_k}{\sum(\lambda^2_k +
@@ -556,7 +556,7 @@ scaled to be unity.</li>
 <li>If all constructs are allowed to freely covary, i.e., there is no
 structural model and no structural parameters, all constructs are
 considered exogenous.</li>
-<li>If the strucutral model contains nonlinear terms (e.g., <span class="math inline">\(\eta^2_1\)</span> or <span class="math inline">\(\eta_1\eta_2\)</span>), degrees of freedom
+<li>If the structural model contains nonlinear terms (e.g., <span class="math inline">\(\eta^2_1\)</span> or <span class="math inline">\(\eta_1\eta_2\)</span>), degrees of freedom
 computation is currently unclear (at least to us). A warning is printed
 to inform the user that the calculation is may not be correct.</li>
 </ol>
@@ -598,7 +598,7 @@ applied users should be aware that only little is known about their
 applicability, intuition, and interpretability in the context of models
 containing constructs modeled as composites or for models estimated
 using a composite-based approach.</p>
-<p>Independent of the approach and model used, a particularily
+<p>Independent of the approach and model used, a particularly
 controversial issue are cutoff values for fit indices <span class="citation">(e.g., Marsh, Hau, and Wen 2004)</span>. In
 factor-based SEM cutoff values are rather popular. The basis for these
 are numerous simulation studies, most notably <span class="citation">Hu
@@ -608,8 +608,8 @@ or worse - no cutoff values have been suggested.<a href="#fn1" class="footnote-r
 keep in mind that the value of a fit index is just <em>some</em>
 indication of good or bad fit. Other aspects related to model fit must
 be considered as well. It is unreasonable to make a binary decision
-about rejection or non-rejection of a model by soley comparing the value
-of a fit index with a (more or less) arbitrary cutoff value.</p>
+about rejection or non-rejection of a model by solely comparing the
+value of a fit index with a (more or less) arbitrary cutoff value.</p>
 <p>The definitions of fit indices calculated by <code>assess()</code>
 are given in the following:</p>
 <ul>
@@ -632,7 +632,7 @@ a certain baseline model called the “null model”.</li>
 <li>The <strong>non-normed fit index</strong> (NNFI) accounts for the
 degrees of freedom of the involved models. It is the ratio of the
 distance between the fit of the baseline model and the fit of the
-specified model (each per degree of freedom) and the distance beetween
+specified model (each per degree of freedom) and the distance between
 the fit of the baseline model and the expected fit of the specified
 model (each per degree of freedom).</li>
 <li>The <strong>comparative fit index</strong> (CFI) estimates the
@@ -870,12 +870,12 @@ measure to an error free measure. It is not to be confused with validity
 as a perfectly reliable measure may be invalid.</p>
 <p>Practically, reliability must be empirically assessed based on a
 theoretical framework. The dominant theoretical framework against which
-to compare empirical reliability results to is the well-known <a href="https://m-e-rademaker.github.io/cSEM/articles/Terminology.html">true
+to compare empirical reliability results to is the well-known <a href="https://floschuberth.github.io/cSEM/articles/Terminology.html">true
 score</a> framework which provides the foundation for the measurement
-model described in the <a href="https://m-e-rademaker.github.io/cSEM/articles/Notation.html">Notation</a>
+model described in the <a href="https://floschuberth.github.io/cSEM/articles/Notation.html">Notation</a>
 help file. Based on the true score framework and using the terminology
-and notation of the <a href="https://m-e-rademaker.github.io/cSEM/articles/Notation.html">Notation</a>
-and <a href="https://m-e-rademaker.github.io/cSEM/articles/Terminology.html">Termniology</a>
+and notation of the <a href="https://floschuberth.github.io/cSEM/articles/Notation.html">Notation</a>
+and <a href="https://floschuberth.github.io/cSEM/articles/Terminology.html">Termniology</a>
 help files, reliability of a generic measurement is defined as:</p>
 <ol style="list-style-type: decimal">
 <li>The amount of proxy true score variance, <span class="math inline">\(Var(\bar\eta)\)</span>, relative to the the proxy
@@ -1018,12 +1018,12 @@ as consistent as possible by relying on a paper by <span class="citation">Cho (2
 formula-generating methods and a systematic naming conventions for all
 common reliability measures. Naturally, some of the conventional
 terminology is deeply entrenched within the nomenclatura of a particular
-filed (e.g., coefficient alpha alias Cronbach’s alpha in pychonometrics)
+filed (e.g., coefficient alpha alias Cronbach’s alpha in pychometrics)
 such that a new, albeit consistent, naming scheme seems superfluous at
 best. However, we belief the merit of a “standardized” naming pattern
 will eventually be helpful to all users as it helps clarify potential
 misconceptions thus preventing potential misuse, such as the (ab)use of
-Cronbach alpha as a reliability measure for congernic measurement
+Cronbach alpha as a reliability measure for congeneric measurement
 models.</p>
 <p>Apart from these considerations, this package takes a pragmatic
 stance in a sense that we use consistent naming because it naturally
@@ -1058,7 +1058,7 @@ Standardized alpha, Split-half reliability</td>
 <tr class="even">
 <td align="center">Tau-equivalent reliability</td>
 <td align="center"><span class="math inline">\(\rho_T\)</span></td>
-<td align="center">Cronbach’s alpha, <span class="math inline">\(\alpha\)</span>, Coefficient alpha Guttmans <span class="math inline">\(\lambda_3\)</span>, KR-20</td>
+<td align="center">Cronbach’s alpha, <span class="math inline">\(\alpha\)</span>, Coefficient alpha Guttman’s <span class="math inline">\(\lambda_3\)</span>, KR-20</td>
 </tr>
 <tr class="odd">
 <td align="center">Tau-equivalent reliability weighted</td>
@@ -1069,7 +1069,7 @@ Standardized alpha, Split-half reliability</td>
 <td align="center">Congeneric reliability</td>
 <td align="center"><span class="math inline">\(\rho_C\)</span></td>
 <td align="center">Composite reliability, Jöreskog’s <span class="math inline">\(\rho\)</span>, Construct reliability, <span class="math inline">\(\omega\)</span>, reliability coefficient,
-Dillon-Goldsteins’s <span class="math inline">\(\rho\)</span></td>
+Dillon-Goldstein’s <span class="math inline">\(\rho\)</span></td>
 </tr>
 <tr class="odd">
 <td align="center">Congeneric reliability weighted</td>
@@ -1150,7 +1150,7 @@ assess convergent and discriminant validity.</p>
 <!-- Spearman-Brown formulae/prophecy, standarized alpha. In `cSEM` parallel  -->
 <!-- reliability is always identical to tau-equivalent reliability as indicators -->
 <!-- are always standardized. Hence, only $\rho_T$ is reported. -->
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-Bentler1990" class="csl-entry">
 Bentler, Peter M. 1990. <span>“Comparative <span>Fit</span>
 <span>Indexes</span> in <span>Structural</span>

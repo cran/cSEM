@@ -223,8 +223,8 @@ Estimate linear, nonlinear, hierarchical or multigroup structural equation
 models using a composite-based approach. In \pkg{cSEM}
 any method or approach that involves linear compounds (scores/proxies/composites)
 of observables (indicators/items/manifest variables) is defined as composite-based.
-See the \href{https://m-e-rademaker.github.io/cSEM/articles/cSEM.html}{Get started}
-section of the \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website}
+See the \href{https://floschuberth.github.io/cSEM/articles/cSEM.html}{Get started}
+section of the \href{https://floschuberth.github.io/cSEM/index.html}{cSEM website}
 for a general introduction to composite-based SEM and \pkg{cSEM}.
 
 \code{csem()} estimates linear, nonlinear, hierarchical  or multigroup structural
@@ -272,7 +272,7 @@ modeled as common factors only and \code{.disattenuate = TRUE}. See below.}
 \code{"SUMCORR"}, \code{"MAXVAR"}, \code{"SSQCORR"}, \code{"MINVAR"}, \code{"GENVAR"}.}
 \item{Principal component analysis (\code{"PCA"})}
 \item{Factor score regression using sum scores (\code{"unit"}),
-regression (\code{"regression"}) or bartlett scores (\code{"bartlett"})}
+regression (\code{"regression"}) or Bartlett scores (\code{"bartlett"})}
 }
 
 It is possible to supply starting values for the weighting algorithm
@@ -424,6 +424,7 @@ Inference is done via resampling. See \code{\link[=resamplecSEMResults]{resample
 fit measures, HTMT, R2 etc.}
 \item{\code{\link[=infer]{infer()}}}{Calculate common inferential quantities, e.g., standard errors,
 confidence intervals.}
+\item{\code{\link[=plot]{plot()}}}{Creates a plot of the model. For the help file see \code{\link[=plot.cSEMResults_default]{plot.cSEMResults_default()}}.}
 \item{\code{\link[=predict]{predict()}}}{Predict endogenous indicator scores and compute common prediction metrics.}
 \item{\code{\link[=summarize]{summarize()}}}{Summarize the results. Mainly called for its side-effect the print method.}
 \item{\code{\link[=verify]{verify()}}}{Verify/Check admissibility of the estimates.}
@@ -432,10 +433,11 @@ confidence intervals.}
 Tests are performed using the test-family of functions. Currently the following
 tests are implemented:
 \describe{
+\item{\code{\link[=testCVPAT]{testCVPAT()}}}{Cross-validated predictive ability test proposed by \insertCite{Liengaard2021;textual}{cSEM}}
 \item{\code{\link[=testOMF]{testOMF()}}}{Bootstrap-based test for overall model fit based on
-\insertCite{Beran1985;textual}{cSEM}}
+\insertCite{Beran1985;textual}{cSEM}.}
 \item{\code{\link[=testMICOM]{testMICOM()}}}{Permutation-based test for measurement invariance of composites
-proposed by \insertCite{Henseler2016;textual}{cSEM}}
+proposed by \insertCite{Henseler2016;textual}{cSEM}.}
 \item{\code{\link[=testMGD]{testMGD()}}}{Several (mainly) permutation-based tests for multi-group comparisons.}
 \item{\code{\link[=testHausman]{testHausman()}}}{Regression-based Hausman test to test for endogeneity.}
 }
@@ -443,7 +445,7 @@ proposed by \insertCite{Henseler2016;textual}{cSEM}}
 Other miscellaneous postestimation functions belong do the do-family of functions.
 Currently three do functions are implemented:
 \describe{
-\item{\code{\link[=doIPMA]{doIPMA()}}}{Performs an importance-performance matrix analyis (IPMA).}
+\item{\code{\link[=doIPMA]{doIPMA()}}}{Performs an importance-performance matrix analysis (IPMA).}
 \item{\code{\link[=doNonlinearEffectsAnalysis]{doNonlinearEffectsAnalysis()}}}{Perform a nonlinear effects analysis as
 described in e.g.,
 \insertCite{Spiller2013;textual}{cSEM}}
@@ -648,6 +650,6 @@ summarize(res)
 }
 \seealso{
 \code{\link[=args_default]{args_default()}}, \link{cSEMArguments}, \link{cSEMResults}, \code{\link[=foreman]{foreman()}}, \code{\link[=resamplecSEMResults]{resamplecSEMResults()}},
-\code{\link[=assess]{assess()}}, \code{\link[=infer]{infer()}}, \code{\link[=predict]{predict()}}, \code{\link[=summarize]{summarize()}}, \code{\link[=verify]{verify()}}, \code{\link[=testOMF]{testOMF()}},
+\code{\link[=assess]{assess()}}, \code{\link[=infer]{infer()}}, \code{\link[=plot.cSEMResults_default]{plot.cSEMResults_default()}}, \code{\link[=predict]{predict()}}, \code{\link[=summarize]{summarize()}}, \code{\link[=verify]{verify()}}, \code{\link[=testCVPAT]{testCVPAT()}}, \code{\link[=testOMF]{testOMF()}},
 \code{\link[=testMGD]{testMGD()}}, \code{\link[=testMICOM]{testMICOM()}}, \code{\link[=testHausman]{testHausman()}}
 }

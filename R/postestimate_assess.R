@@ -3,9 +3,9 @@
 #' \lifecycle{maturing}
 #' 
 #' Assess a model using common quality criteria.
-#' See the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
+#' See the \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
 #' article on the
-#' \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website} for details.
+#' \href{https://floschuberth.github.io/cSEM/index.html}{cSEM website} for details.
 #' 
 #' The function is essentially a wrapper around a number of internal functions
 #' that perform an "assessment task" (called a **quality criterion** in \pkg{cSEM}
@@ -34,13 +34,13 @@
 #'   An estimate of the reliability assuming a congeneric measurement model (i.e., loadings are
 #'   allowed to differ) and a test score (proxy) based on unit weights.
 #'   There are four different versions implemented. See the 
-#'   \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#methods}{Methods and Formulae} section
-#'   of the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
+#'   \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html#methods}{Methods and Formulae} section
+#'   of the \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
 #'   article on the
-#'   \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website} for details.
+#'   \href{https://floschuberth.github.io/cSEM/index.html}{cSEM website} for details.
 #'   Alternative but synonymous names for `"rho_C"` are: 
 #'   composite reliability, construct reliability, reliability coefficient, 
-#'   Joereskog's rho, coefficient omega, or Dillon-Goldstein's rho. 
+#'   Jöreskog's rho, coefficient omega, or Dillon-Goldstein's rho. 
 #'   For `"rho_C_weighted"`: (Dijkstra-Henselers) rhoA. `rho_C_mm` and `rho_C_weighted_mm`
 #'   have no corresponding names. The former uses unit weights scaled by (w'Sw)^(-1/2) and
 #'   the latter weights scaled by (w'Sigma_hat w)^(-1/2) where Sigma_hat is 
@@ -90,7 +90,7 @@
 #'   criterion is a decision rule based on a comparison between the squared
 #'   construct correlations and the average variance extracted. FL returns
 #'   a matrix with the squared construct correlations on the off-diagonal and 
-#'   the AVE's on the main diagonal. Calculation is done by `calculateFLCriterion()`.}
+#'   the AVEs on the main diagonal. Calculation is done by `calculateFLCriterion()`.}
 #' \item{Goodness of Fit (GoF); "gof"}{The GoF is defined as the square root 
 #'   of the mean of the R squares of the structural model times the mean 
 #'   of the variances in the indicators that are explained by their 
@@ -128,13 +128,13 @@
 #'   Several model selection criteria as suggested by \insertCite{Sharma2019;textual}{cSEM}
 #'   in the context of PLS. See: [calculateModelSelectionCriteria()] for details.}
 #' \item{Reliability: "reliability"}{
-#'   As described in the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#methods}{Methods and Formulae} 
-#'   section of the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
-#'   article on the \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website} 
+#'   As described in the \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html#methods}{Methods and Formulae} 
+#'   section of the \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
+#'   article on the \href{https://floschuberth.github.io/cSEM/index.html}{cSEM website} 
 #'   there are many different estimators for the (internal consistency) reliability.
 #'   Choosing `.quality_criterion = "reliability"` computes the three most common
-#'   measures, namely: "Cronbachs alpha" (identical to "rho_T"), "Jöreskogs rho" (identical to "rho_C_mm"),
-#'   and "Dijkstra-Henselers rho A" (identical to "rho_C_weighted_mm").
+#'   measures, namely: "Cronbach's alpha" (identical to "rho_T"), "Jöreskog's rho" (identical to "rho_C_mm"),
+#'   and "Dijkstra-Henseler's rho A" (identical to "rho_C_weighted_mm").
 #'   Reliability is inherently
 #'   tied to the common factor model. It is therefore unclear how to meaningfully 
 #'   interpret reliability estimates for constructs modeled as composites. 
@@ -176,15 +176,15 @@
 #'   Calculation is done by [calculateVIFModeB()].}
 #' }
 #' 
-#' For details on the most important quality criteria see the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html#methods}{Methods and Formulae} section
-#' of the \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
+#' For details on the most important quality criteria see the \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html#methods}{Methods and Formulae} section
+#' of the \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
 #' article on the on the
-#' \href{https://m-e-rademaker.github.io/cSEM/index.html}{cSEM website}.
+#' \href{https://floschuberth.github.io/cSEM/index.html}{cSEM website}.
 #' 
 #' Some of the quality criteria are inherently tied to the classical common
 #' factor model and therefore only meaningfully interpreted within a common
 #' factor model (see the 
-#' \href{https://m-e-rademaker.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
+#' \href{https://floschuberth.github.io/cSEM/articles/Using-assess.html}{Postestimation: Assessing a model} 
 #' article for details). 
 #' It is possible to force computation of all quality criteria for constructs 
 #' modeled as composites by setting `.only_common_factors = FALSE`, however, 
