@@ -1,7 +1,7 @@
 Package: cSEM
 Title: Composite-Based Structural Equation Modeling
-Version: 0.6.0
-Date: 2025-02-24
+Version: 0.6.1
+Date: 2025-05-15
 Authors@R: c(person(given = "Manuel E.", family = "Rademaker",
                     role  = c("aut"),
                     email = "manuel-rademaker@outlook.de",
@@ -48,6 +48,7 @@ URL: https://github.com/FloSchuberth/cSEM/,
         https://floschuberth.github.io/cSEM/
 License: GPL-3
 Encoding: UTF-8
+NeedsCompilation: yes
 LazyData: true
 Imports: alabama, cli, crayon, expm (>= 0.999-5), future.apply, future,
         lifecycle, lavaan, magrittr, MASS, Matrix, matrixcalc,
@@ -61,14 +62,16 @@ Suggests: DiagrammeR, DiagrammeRsvg, dplyr, tidyr, knitr, nnls,
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Language: en-US
-NeedsCompilation: yes
-Packaged: 2025-02-25 09:34:56 UTC; SchuberthF
-Author: Manuel E. Rademaker [aut] (<https://orcid.org/0000-0002-8902-3561>),
-  Florian Schuberth [aut, cre] (<https://orcid.org/0000-0002-2110-9086>),
-  Tamara Schamberger [ctb] (<https://orcid.org/0000-0002-7845-784X>),
-  Michael Klesel [ctb] (<https://orcid.org/0000-0002-2884-1819>),
-  Huu Phuc Nguyen [ctb] (<https://orcid.org/0009-0000-9344-7132>),
+Packaged: 2025-05-15 14:33:52 UTC; SchuberthF
+Author: Manuel E. Rademaker [aut] (ORCID:
+    <https://orcid.org/0000-0002-8902-3561>),
+  Florian Schuberth [aut, cre] (ORCID:
+    <https://orcid.org/0000-0002-2110-9086>),
+  Tamara Schamberger [ctb] (ORCID:
+    <https://orcid.org/0000-0002-7845-784X>),
+  Michael Klesel [ctb] (ORCID: <https://orcid.org/0000-0002-2884-1819>),
+  Huu Phuc Nguyen [ctb] (ORCID: <https://orcid.org/0009-0000-9344-7132>),
   Theo K. Dijkstra [ctb],
-  Jörg Henseler [ctb] (<https://orcid.org/0000-0002-9736-3048>)
+  Jörg Henseler [ctb] (ORCID: <https://orcid.org/0000-0002-9736-3048>)
 Repository: CRAN
-Date/Publication: 2025-02-25 10:00:02 UTC
+Date/Publication: 2025-05-16 09:40:14 UTC
